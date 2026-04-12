@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/src/app/globals.css"],"sourcesContent":["@tailwind base;\r\n@tailwind components;\r\n@tailwind utilities;\r\n\r\n:root {\r\n  --foreground-rgb: 0, 0, 0;\r\n  --background-start-rgb: 214, 219, 220;\r\n  --background-end-rgb: 255, 255, 255;\r\n}\r\n\r\n@media (prefers-color-scheme: dark) {\r\n  :root {\r\n    --foreground-rgb: 255, 255, 255;\r\n    --background-start-rgb: 0, 0, 0;\r\n    --background-end-rgb: 0, 0, 0;\r\n  }\r\n}\r\n\r\nbody {\r\n  color: rgb(var(--foreground-rgb));\r\n  background: white;\r\n  margin: 0;\r\n  padding: 0;\r\n}\r\n\r\nhtml, body, #__next {\r\n  height: 100%;\r\n}\r\n"],"names":[],"mappings":"AAAA;;AACA;;AACA;;AAEA;;;;;;AAMA;EACE;;;;;;;AAOF;;;;;;;AAOA"}}]
+}
