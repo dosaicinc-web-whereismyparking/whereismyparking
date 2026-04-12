@@ -28,11 +28,11 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Parking Discovery (User-Side)
 
 - [ ] **DISC-01**: Display list of nearby parking spaces with name, type, distance, address
-- [ ] **DISC-02**: Filter by type: Public / Private
-- [ ] **DISC-03**: Filter by coverage: Open-air / Covered / Multi-level
-- [ ] **DISC-04**: Show availability timing for each listing
+- [x] **DISC-02**: Filter by type: Public / Private
+- [x] **DISC-03**: Filter by coverage: Open-air / Covered / Multi-level
+- [x] **DISC-04**: Show availability timing for each listing
 - [ ] **DISC-05**: Navigate button: deep-link to Google Maps with destination coordinates
-- [ ] **DISC-06**: Show placeholder card when no parking found within 2 km radius
+- [x] **DISC-06**: Show placeholder card when no parking found within 2 km radius
 
 ### Listing Management (Owner-Side)
 
@@ -114,11 +114,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | LOC-05 | Phase 1 | Pending |
 | LOC-06 | Phase 1 | Pending |
 | DISC-01 | Phase 1 | Pending |
-| DISC-02 | Phase 1 | Pending |
-| DISC-03 | Phase 1 | Pending |
-| DISC-04 | Phase 1 | Pending |
+| DISC-02 | Phase 1 | Complete |
+| DISC-03 | Phase 1 | Complete |
+| DISC-04 | Phase 1 | Complete |
 | DISC-05 | Phase 1 | Pending |
-| DISC-06 | Phase 1 | Pending |
+| DISC-06 | Phase 1 | Complete |
 | LIST-01 | Phase 2 | Pending |
 | LIST-02 | Phase 2 | Pending |
 | LIST-03 | Phase 2 | Pending |
