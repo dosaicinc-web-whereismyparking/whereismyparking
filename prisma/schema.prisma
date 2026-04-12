@@ -1,0 +1,70 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  phone     String   @unique
+  createdAt DateTime @default(now())
+
+  adminUser AdminUser?
+
+  @@map("users")
+}
+
+// RLS Policies:
+// - Users can read their own profile
+// - Admins can read all profiles
+
+model AdminUser {
+  userId String @id @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("admin_users")
+}
+
+// RLS Policies:
+// - Only admins can read/write to this table
+
+model ParkingListing {
+  id             String           @id @default(cuid())
+  name           String
+  address        String
+  location       Unsupported("geometry(Point, 4326)")
+  type           ParkingType
+  coverage       CoverageType
+  availableHours Json?
+  status         ListingStatus    @default(PENDING)
+  createdAt      DateTime         @default(now())
+
+  @@index([location], type: Gist)
+  @@map("parking_listings")
+}
+
+// RLS Policies:
+// - Anyone can read ACTIVE listings
+// - Owners/Admins can write listings
+
+enum ParkingType {
+  PUBLIC
+  PRIVATE
+}
+
+enum CoverageType {
+  OPEN
+  COVERED
+  MULTI
+}
+
+enum ListingStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+}
