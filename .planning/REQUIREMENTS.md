@@ -9,12 +9,12 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Authentication
 
-- [ ] **AUTH-01**: Send OTP to mobile number via SMS gateway (MSG91 / Fast2SMS)
-- [ ] **AUTH-02**: Verify OTP with 5-minute expiry and 3-attempt lockout
-- [ ] **AUTH-03**: Issue JWT session token on successful OTP verification
-- [ ] **AUTH-04**: Auto-logout on 30-day token expiry
-- [ ] **AUTH-05**: Resend OTP with 60-second cooldown
-- [ ] **AUTH-06**: Admin login restricted to whitelisted mobile numbers stored in env config
+- [x] **AUTH-01**: Send OTP to mobile number via SMS gateway (MSG91 / Fast2SMS)
+- [x] **AUTH-02**: Verify OTP with 5-minute expiry and 3-attempt lockout
+- [x] **AUTH-03**: Issue JWT session token on successful OTP verification
+- [x] **AUTH-04**: Auto-logout on 30-day token expiry
+- [x] **AUTH-05**: Resend OTP with 60-second cooldown
+- [x] **AUTH-06**: Admin login restricted to whitelisted mobile numbers stored in env config
 
 ### Location Services
 
@@ -101,12 +101,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
-| AUTH-03 | Phase 1 | Pending |
-| AUTH-04 | Phase 1 | Pending |
-| AUTH-05 | Phase 1 | Pending |
-| AUTH-06 | Phase 1 | Pending |
+| AUTH-01 | Phase 1 | Complete |
+| AUTH-02 | Phase 1 | Complete |
+| AUTH-03 | Phase 1 | Complete |
+| AUTH-04 | Phase 1 | Complete |
+| AUTH-05 | Phase 1 | Complete |
+| AUTH-06 | Phase 1 | Complete |
 | LOC-01 | Phase 1 | Pending |
 | LOC-02 | Phase 1 | Pending |
 | LOC-03 | Phase 1 | Pending |
