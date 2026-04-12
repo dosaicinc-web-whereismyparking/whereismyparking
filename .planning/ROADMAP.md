@@ -34,6 +34,7 @@ Success criteria:
 2. Subscription payment flow works via UPI deep-links with UTR verification
 3. Owner dashboard shows listing status (Pending/Active/Expired)
 4. Listings become visible to users only after admin approval
+5. **[Security carry-forward from Ph1]** RLS policies enabled on all tables via `supabase/migrations/02_rls_policies.sql` (T-01-07, T-01-08 deferred from Phase 1 security audit)
 
 **Phase 3: Admin Panel & Content Management**
 Goal: Enable platform administration and content curation
