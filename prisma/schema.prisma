@@ -30,6 +30,15 @@ model AdminUser {
   @@map("admin_users")
 }
 
+model OtpRateLimit {
+  phone     String   @id
+  attempts  Int      @default(0)
+  lastSent  DateTime @default(now())
+  lockedAt  DateTime?
+
+  @@map("otp_rate_limits")
+}
+
 // RLS Policies:
 // - Only admins can read/write to this table
 
