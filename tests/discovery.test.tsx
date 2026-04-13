@@ -110,6 +110,22 @@ describe('Parking Discovery (Phase 1)', () => {
 
       expect(screen.getByText(/no parking spots found/i)).toBeInTheDocument();
     });
+
+    it('DISC-04: shows availability timing for each parking listing', () => {
+      render(
+        <ParkingList 
+          parkingData={mockParkingData} 
+          selectedId={null} 
+          onSelect={() => {}} 
+          filters={{ type: 'ALL', coverage: 'ALL' }}
+          onFilterChange={() => {}}
+        />
+      );
+
+      // Each listing should display availability information
+      const availabilityElements = screen.getAllByText(/available/i);
+      expect(availabilityElements.length).toBeGreaterThanOrEqual(mockParkingData.length);
+    });
   });
 
   describe('Nearby search API', () => {
