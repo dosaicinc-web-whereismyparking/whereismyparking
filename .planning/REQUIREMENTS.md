@@ -56,14 +56,14 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Admin Panel
 
-- [ ] **ADM-01**: Admin can view all private listing submissions with PENDING status
-- [ ] **ADM-02**: Admin can Approve or Reject a listing with an optional rejection reason
-- [ ] **ADM-03**: Admin can add, edit, or delete public parking data directly
-- [ ] **ADM-04**: Admin can view all registered owners with subscription status
-- [ ] **ADM-05**: Admin can manually activate/deactivate a subscription
-- [ ] **ADM-06**: Admin can view and verify UTR payment submissions
-- [ ] **ADM-07**: Admin dashboard shows KPIs: total listings, active subscriptions, pending approvals
-- [ ] **ADM-08**: Admin can export listings and user data as CSV
+- [x] **ADM-01**: Admin can view all private listing submissions with PENDING status
+- [x] **ADM-02**: Admin can Approve or Reject a listing with an optional rejection reason
+- [x] **ADM-03**: Admin can add, edit, or delete public parking data directly
+- [x] **ADM-04**: Admin can view all registered owners with subscription status
+- [x] **ADM-05**: Admin can manually activate/deactivate a subscription
+- [x] **ADM-06**: Admin can view and verify UTR payment submissions
+- [x] **ADM-07**: Admin dashboard shows KPIs: total listings, active subscriptions, pending approvals
+- [x] **ADM-08**: Admin can export listings and user data as CSV
 
 ## v2 Requirements
 
@@ -132,14 +132,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PAY-04 | Phase 2 | Pending |
 | PAY-05 | Phase 2 | Pending |
 | PAY-06 | Phase 2 | Pending |
-| ADM-01 | Phase 3 | Pending |
-| ADM-02 | Phase 3 | Pending |
-| ADM-03 | Phase 3 | Pending |
-| ADM-04 | Phase 3 | Pending |
-| ADM-05 | Phase 3 | Pending |
-| ADM-06 | Phase 3 | Pending |
-| ADM-07 | Phase 3 | Pending |
-| ADM-08 | Phase 3 | Pending |
+| ADM-01 | Phase 3 | Complete |
+| ADM-02 | Phase 3 | Complete |
+| ADM-03 | Phase 3 | Complete |
+| ADM-04 | Phase 3 | Complete |
+| ADM-05 | Phase 3 | Complete |
+| ADM-06 | Phase 3 | Complete |
+| ADM-07 | Phase 3 | Complete |
+| ADM-08 | Phase 3 | Complete |
 
 **Coverage:**
 - v1 requirements: 32 total
@@ -148,4 +148,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-04-12*
-*Last updated: 2026-04-12 after initial definition*
+*Last updated: 2026-04-14 after Phase 3 execution*
