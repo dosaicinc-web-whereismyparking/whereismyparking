@@ -1,10 +1,11 @@
 ---
 phase: 03
 slug: admin-panel-content-management
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-04-14
+reviewed_at: 2026-04-14
 ---
 
 # Phase 03 - UI Design Contract
@@ -90,7 +91,7 @@ Declared values (must be multiples of 4):
 | 2xl | 48px | Major section breaks, empty-state breathing room |
 | 3xl | 64px | Page-level vertical spacing on desktop overview |
 
-Exceptions: 44px minimum touch target height for tab triggers, row actions, icon buttons, and modal footer buttons; 56px minimum height for primary queue CTA buttons.
+Exceptions: 48px minimum touch target height for tab triggers, row actions, icon buttons, and modal footer buttons; 64px minimum height for primary queue CTA buttons.
 
 ---
 
@@ -150,11 +151,11 @@ Accent reserved for: `Review next item`, `Approve listing`, `Verify payment`, ac
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved 2026-04-14
