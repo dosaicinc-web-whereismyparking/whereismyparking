@@ -62,6 +62,16 @@ Success criteria:
 3. Navigation deep-links work consistently across all listing types
 4. 4G initial page load verified at <2.0s via Lighthouse audit
 
+### Phase 5: prototyping-self-hosted-stack-bugfixes
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 4
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 5 to break down)
+
 ---
 
 *Roadmap created: 2026-04-12*
