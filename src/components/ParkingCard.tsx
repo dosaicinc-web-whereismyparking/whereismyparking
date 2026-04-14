@@ -2,17 +2,20 @@ import React from 'react';
 import { ParkingListing } from '@/lib/supabase-types';
 import { Clock } from 'lucide-react';
 import { NavigateButton } from './NavigateButton';
+import OptimizedImage from './Image';
 
 interface ParkingCardProps {
   parking: ParkingListing;
   isSelected: boolean;
   onSelect: () => void;
+  priority?: boolean;
 }
 
 export const ParkingCard: React.FC<ParkingCardProps> = ({
   parking,
   isSelected,
   onSelect,
+  priority = false,
 }) => {
   return (
     <div
@@ -21,6 +24,14 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({
       }`}
       onClick={onSelect}
     >
+      {parking.images && parking.images.length > 0 && (
+        <OptimizedImage
+          src={parking.images[0]}
+          alt={parking.name}
+          priority={priority}
+          className="w-full h-32 object-cover rounded-lg mb-4"
+        />
+      )}
       <div className="flex justify-between items-start mb-2">
         <h3 className="font-extrabold text-srd-blue">{parking.name}</h3>
         {parking.distance !== undefined && (

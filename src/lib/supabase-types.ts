@@ -1,6 +1,14 @@
 export type ParkingType = 'PUBLIC' | 'PRIVATE';
 export type CoverageType = 'OPEN' | 'COVERED' | 'MULTI';
-export type ListingStatus = 'PENDING' | 'ACTIVE' | 'EXPIRED';
+export type ListingStatus = 'PENDING' | 'ACTIVE' | 'EXPIRED' | 'REJECTED' | 'INACTIVE' | 'ARCHIVED';
+export type SubscriptionStatus =
+  | 'PENDING_PAYMENT'
+  | 'PENDING_VERIFICATION'
+  | 'ACTIVE'
+  | 'GRACE_PERIOD'
+  | 'EXPIRED'
+  | 'INACTIVE'
+  | 'REJECTED';
 
 export interface ParkingListing {
   id: string;
@@ -13,4 +21,19 @@ export interface ParkingListing {
   latitude: number;
   longitude: number;
   distance?: number;
+  ownerId: string;
+  images?: string[] | null;
+}
+
+export interface Subscription {
+  id: string;
+  listingId: string;
+  ownerId: string;
+  startDate?: string;
+  endDate?: string;
+  status: SubscriptionStatus;
+  upiId?: string;
+  utr?: string;
+  verifiedAt?: string;
+  createdAt: string;
 }
