@@ -10,8 +10,8 @@ import Map, {
   Popup,
   MapRef,
   LayerProps
-} from 'react-map-gl/mapbox';
-import 'mapbox-gl/dist/mapbox-gl.css';
+} from 'react-map-gl/maplibre';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import { ParkingListing } from '@/lib/supabase-types';
 
 interface MapProps {
@@ -26,7 +26,7 @@ interface MapProps {
   };
 }
 
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+const MAP_STYLE = process.env.NEXT_PUBLIC_MAPLIBRE_STYLE_URL || 'https://demotiles.maplibre.org/style.json';
 
 const clusterLayer: LayerProps = {
   id: 'clusters',
@@ -46,7 +46,7 @@ const clusterCountLayer: LayerProps = {
   filter: ['has', 'point_count'],
   layout: {
     'text-field': '{point_count_abbreviated}',
-    'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+    'text-font': ['Open Sans Regular', 'Arial Unicode MS Bold'],
     'text-size': 12
   }
 };
@@ -57,21 +57,20 @@ const unclusteredPointLayer: LayerProps = {
   source: 'parking-spots',
   filter: ['!', ['has', 'point_count']],
   paint: {
-    'circle-color': '#11b4da',
+    'circle-color': '#1A4A8A', // SRD Blue
     'circle-radius': 10,
     'circle-stroke-width': 2,
     'circle-stroke-color': '#fff'
   }
 };
 
-// Add a highlight layer for the selected point
 const highlightLayer: LayerProps = {
   id: 'highlighted-point',
   type: 'circle',
   source: 'parking-spots',
-  filter: ['==', ['get', 'id'], ''], // Initial empty filter
+  filter: ['==', ['get', 'id'], ''], 
   paint: {
-    'circle-color': '#ef4444',
+    'circle-color': '#F97316', // SRD Orange
     'circle-radius': 12,
     'circle-stroke-width': 3,
     'circle-stroke-color': '#fff'
@@ -84,7 +83,7 @@ export const ParkingMap: React.FC<MapProps> = ({
   onSelect,
   selectedId,
   initialViewState = {
-    latitude: 12.9716, // Bangalore default
+    latitude: 12.9716, 
     longitude: 77.5946,
     zoom: 13
   }
@@ -105,7 +104,6 @@ export const ParkingMap: React.FC<MapProps> = ({
     }))
   }), [parkingData]);
 
-  // Update highlight filter when selectedId changes
   useEffect(() => {
     if (mapRef.current) {
       const map = mapRef.current.getMap();
@@ -132,9 +130,9 @@ export const ParkingMap: React.FC<MapProps> = ({
       onSelect?.(parking.id);
     } else if (feature && feature.layer.id === 'clusters') {
       const clusterId = feature.properties.cluster_id;
-      const mapboxSource = mapRef.current?.getSource('parking-spots') as mapboxgl.GeoJSONSource;
+      const maplibreSource = mapRef.current?.getSource('parking-spots') as any;
 
-      mapboxSource.getClusterExpansionZoom(clusterId, (err, zoom) => {
+      maplibreSource.getClusterExpansionZoom(clusterId, (err: any, zoom: number) => {
         if (err || zoom === undefined) return;
 
         mapRef.current?.easeTo({
@@ -169,12 +167,14 @@ export const ParkingMap: React.FC<MapProps> = ({
         onClick={onMapClick}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
+        onError={(e) => {
+          console.error('MapLibre Load Error:', e);
+        }}
         interactiveLayerIds={[clusterLayer.id!, unclusteredPointLayer.id!, highlightLayer.id!]}
-        mapStyle="mapbox://styles/mapbox/streets-v12"
-        mapboxAccessToken={MAPBOX_TOKEN}
+        mapStyle={MAP_STYLE}
         style={{ width: '100%', height: '100%' }}
       >
-        <GeolocateControl position="top-left" trackUserLocation showUserHeading />
+        <GeolocateControl position="top-left" trackUserLocation />
         <FullscreenControl position="top-left" />
         <NavigationControl position="top-left" />
 
@@ -208,8 +208,8 @@ export const ParkingMap: React.FC<MapProps> = ({
               <h3 className="font-bold text-sm">{popupInfo.name}</h3>
               <p className="text-xs text-gray-600 mb-1">{popupInfo.address}</p>
               <div className="flex gap-1">
-                <span className="text-[10px] px-1 bg-blue-100 text-blue-800 rounded">{popupInfo.type}</span>
-                <span className="text-[10px] px-1 bg-green-100 text-green-800 rounded">{popupInfo.coverage}</span>
+                <span className="text-[10px] px-1 bg-srd-blue/10 text-srd-blue font-bold rounded">{popupInfo.type}</span>
+                <span className="text-[10px] px-1 bg-srd-orange/10 text-srd-orange font-bold rounded">{popupInfo.coverage}</span>
               </div>
               {popupInfo.distance !== undefined && (
                 <p className="text-[10px] mt-1 font-medium">{popupInfo.distance}m away</p>
@@ -218,14 +218,6 @@ export const ParkingMap: React.FC<MapProps> = ({
           </Popup>
         )}
       </Map>
-      {!MAPBOX_TOKEN && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100/80 z-50 p-4 text-center">
-            <div className="bg-white p-4 rounded shadow-lg border border-red-200">
-                <p className="text-red-600 font-semibold">Mapbox Token Missing</p>
-                <p className="text-sm text-gray-600">Please set NEXT_PUBLIC_MAPBOX_TOKEN in .env.local</p>
-            </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -76,15 +76,16 @@ LIMIT 50;
 
 | Technology | Version | Purpose | Why | Confidence |
 |------------|---------|---------|-----|------------|
-| **Mapbox GL JS** | `3.21.0` (latest) | Interactive vector maps (web) | **Superior rendering performance** for dense urban parking markers; generous free tier (50K MAU); better marker clustering than Google Maps; offline map packs for mobile (Phase 2); style customization for branded maps; **native React Native SDK** (`@rnmapbox/maps`) for seamless mobile transition | **HIGH** - Extensive React documentation and Next.js compatibility confirmed |
-| **react-map-gl** | `8.1.0` (latest) | React wrapper for Mapbox GL | Declarative React API; TypeScript types; separates Mapbox and MapLibre codepaths in v8; maintains camera state in React; better integration with React ecosystem than raw Mapbox SDK | **HIGH** - Official Mapbox docs recommend for React projects |
+| **MapLibre GL JS** | `4.0+` (latest) | Interactive vector maps (web) | **100% open source, no API keys required**; uses OpenFreeMap open tile server; identical API to Mapbox GL JS; same rendering performance and marker clustering; full offline support; no vendor lock-in; no usage limits or billing | **HIGH** - Drop-in replacement for Mapbox GL JS with full compatibility |
+| **react-map-gl** | `8.1.0` (latest) | React wrapper for MapLibre GL | Declarative React API; TypeScript types; native MapLibre support in v8; maintains camera state in React; better integration with React ecosystem than raw MapLibre SDK | **HIGH** - Official MapLibre compatible library |
 | **Geolocation API** | Browser native | User location detection | Standard `navigator.geolocation.getCurrentPosition()`; no external dependencies; works across all modern browsers; permission prompt handled by browser | **HIGH** - Web standard API |
 
-**Why Mapbox over Google Maps:**
-1. **Cost**: Google Maps charges per map load ($7/1K loads); Mapbox free up to 50K MAU (~150K map views/month)
-2. **Performance**: Vector tiles render faster; client-side clustering handles 1000+ markers without lag
-3. **Mobile transition**: Mapbox has official React Native SDK (`@rnmapbox/maps`) with same API patterns
-4. **Customization**: Style editor for branded maps; Google Maps limited to basic styling
+**Why MapLibre over Mapbox/Google Maps:**
+1. **Zero Cost**: No API keys, no usage limits, no billing, no rate limits - completely free forever
+2. **Open Source**: Full source code available, no vendor lock-in
+3. **Performance**: Same vector tile rendering performance as Mapbox GL JS
+4. **Tile Source**: https://tiles.openfreemap.org/styles/liberty - community hosted open tile service
+5. **API Compatible**: Exact same API surface as Mapbox GL JS for seamless migration
 
 **For React Native (Phase 2 mobile apps):**
 - **@rnmapbox/maps** (formerly `react-native-mapbox-gl`): Official Mapbox React Native library
@@ -472,7 +473,7 @@ cd wherismyparking
 npm install @supabase/supabase-js @supabase/ssr
 
 # Install maps
-npm install mapbox-gl react-map-gl
+npm install maplibre-gl react-map-gl
 
 # Install UI libraries
 npm install @radix-ui/react-dialog @radix-ui/react-dropdown-menu  # shadcn/ui primitives
@@ -521,9 +522,8 @@ npm install @supabase/supabase-js @react-native-async-storage/async-storage
 
 ```bash
 # .env.local (Next.js web)
-NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-NEXT_PUBLIC_MAPBOX_TOKEN=pk.eyJ1Ijoic29tZXVzZXIiLCJhIjoiY2thenVpY3pwMD...
 
 # Edge function secrets (Supabase)
 MSG91_AUTH_KEY=your_msg91_key

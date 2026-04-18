@@ -5,17 +5,18 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 interface ListingPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export async function generateMetadata({ params }: ListingPageProps): Promise<Metadata> {
   try {
+    const { id } = await params;
     const { data: listing } = await supabase
       .from('parking_listings')
       .select('name, address, type')
-      .eq('id', params.id)
+      .eq('id', id)
       .single();
 
     if (!listing) {
@@ -50,10 +51,11 @@ export async function generateMetadata({ params }: ListingPageProps): Promise<Me
 
 export default async function ListingPage({ params }: ListingPageProps) {
   try {
+    const { id } = await params;
     const { data: listing } = await supabase
       .from('parking_listings')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single();
 
     if (!listing) {

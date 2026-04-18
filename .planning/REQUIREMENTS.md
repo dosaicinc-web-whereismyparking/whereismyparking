@@ -18,40 +18,40 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Location Services
 
-- [ ] **LOC-01**: Request browser/device GPS on page load with graceful fallback
-- [ ] **LOC-02**: Allow manual city/area search if GPS is denied
-- [ ] **LOC-03**: Calculate and display distance (km) from user to each listing
-- [ ] **LOC-04**: Sort listings by distance ascending (nearest first) by default
-- [ ] **LOC-05**: Display listings on an interactive map (Mapbox GL JS)
-- [ ] **LOC-06**: Update results dynamically on map pan/zoom
+- [x] **LOC-01**: Request browser/device GPS on page load with graceful fallback
+- [x] **LOC-02**: Allow manual city/area search if GPS is denied
+- [x] **LOC-03**: Calculate and display distance (km) from user to each listing
+- [x] **LOC-04**: Sort listings by distance ascending (nearest first) by default
+- [x] **LOC-05**: Display listings on an interactive map (MapLibre GL JS)
+- [x] **LOC-06**: Update results dynamically on map pan/zoom
 
 ### Parking Discovery (User-Side)
 
-- [ ] **DISC-01**: Display list of nearby parking spaces with name, type, distance, address
+- [x] **DISC-01**: Display list of nearby parking spaces with name, type, distance, address
 - [x] **DISC-02**: Filter by type: Public / Private
 - [x] **DISC-03**: Filter by coverage: Open-air / Covered / Multi-level
 - [x] **DISC-04**: Show availability timing for each listing
-- [ ] **DISC-05**: Navigate button: deep-link to Google Maps with destination coordinates
+- [x] **DISC-05**: Navigate button: deep-link to Google Maps with destination coordinates
 - [x] **DISC-06**: Show placeholder card when no parking found within 2 km radius
 
 ### Listing Management (Owner-Side)
 
-- [ ] **LIST-01**: Owner can create a new parking listing via a multi-step form
-- [ ] **LIST-02**: Listing form captures: Name, Address, GPS coordinates (map pin), Slot type, Coverage type, Available hours, Vehicle types accepted
-- [ ] **LIST-03**: Listing is submitted in PENDING state - not visible to users until admin approves
-- [ ] **LIST-04**: Owner dashboard shows all their listings with status tags (Pending / Active / Rejected / Expired)
-- [ ] **LIST-05**: Owner can edit a listing; edited listing reverts to PENDING status for re-approval
-- [ ] **LIST-06**: Listing becomes EXPIRED if subscription lapses for more than 7 days
-- [ ] **LIST-07**: Owner can delete a listing (soft delete - retained in DB with deleted flag)
+- [x] **LIST-01**: Owner can create a new parking listing via a multi-step form
+- [x] **LIST-02**: Listing form captures: Name, Address, GPS coordinates (map pin), Slot type, Coverage type, Available hours, Vehicle types accepted
+- [x] **LIST-03**: Listing is submitted in PENDING state - not visible to users until admin approves
+- [x] **LIST-04**: Owner dashboard shows all their listings with status tags (Pending / Active / Rejected / Expired)
+- [x] **LIST-05**: Owner can edit a listing; edited listing reverts to PENDING status for re-approval
+- [x] **LIST-06**: Listing becomes EXPIRED if subscription lapses for more than 7 days
+- [x] **LIST-07**: Owner can delete a listing (soft delete - retained in DB with deleted flag)
 
 ### Subscription & Payment (Owner-Side)
 
-- [ ] **PAY-01**: Owner prompted to subscribe (₹499/month) before submitting a listing
-- [ ] **PAY-02**: Payment flow: Owner enters UPI ID → platform shows UPI payment link / QR (₹499) → owner pays via Google Pay
-- [ ] **PAY-03**: Owner submits UTR (transaction reference) for manual payment verification by admin
-- [ ] **PAY-04**: Admin verifies UTR and activates subscription manually in MVP
-- [ ] **PAY-05**: Subscription record includes: start date, end date, status (active/expired/cancelled)
-- [ ] **PAY-06**: Email/SMS notification sent to owner 7 days before subscription expiry
+- [x] **PAY-01**: Owner prompted to subscribe (₹499/month) before submitting a listing
+- [x] **PAY-02**: Payment flow: Owner enters UPI ID → platform shows UPI payment link / QR (₹499) → owner pays via Google Pay
+- [x] **PAY-03**: Owner submits UTR (transaction reference) for manual payment verification by admin
+- [x] **PAY-04**: Admin verifies UTR and activates subscription manually in MVP
+- [x] **PAY-05**: Subscription record includes: start date, end date, status (active/expired/cancelled)
+- [x] **PAY-06**: Email/SMS notification sent to owner 7 days before subscription expiry
 - [ ] **PAY-07**: Automated subscription engine (Razorpay recurring) to be added in v2
 
 ### Admin Panel
@@ -107,31 +107,31 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-04 | Phase 1 | Complete |
 | AUTH-05 | Phase 1 | Complete |
 | AUTH-06 | Phase 1 | Complete |
-| LOC-01 | Phase 1 | Pending |
-| LOC-02 | Phase 1 | Pending |
-| LOC-03 | Phase 1 | Pending |
-| LOC-04 | Phase 1 | Pending |
-| LOC-05 | Phase 1 | Pending |
-| LOC-06 | Phase 1 | Pending |
-| DISC-01 | Phase 1 | Pending |
+| LOC-01 | Phase 1 | Complete |
+| LOC-02 | Phase 1 | Complete |
+| LOC-03 | Phase 1 | Complete |
+| LOC-04 | Phase 1 | Complete |
+| LOC-05 | Phase 1 | Complete |
+| LOC-06 | Phase 1 | Complete |
+| DISC-01 | Phase 1 | Complete |
 | DISC-02 | Phase 1 | Complete |
 | DISC-03 | Phase 1 | Complete |
 | DISC-04 | Phase 1 | Complete |
-| DISC-05 | Phase 1 | Pending |
+| DISC-05 | Phase 1 | Complete |
 | DISC-06 | Phase 1 | Complete |
-| LIST-01 | Phase 2 | Pending |
-| LIST-02 | Phase 2 | Pending |
-| LIST-03 | Phase 2 | Pending |
-| LIST-04 | Phase 2 | Pending |
-| LIST-05 | Phase 2 | Pending |
-| LIST-06 | Phase 2 | Pending |
-| LIST-07 | Phase 2 | Pending |
-| PAY-01 | Phase 2 | Pending |
-| PAY-02 | Phase 2 | Pending |
-| PAY-03 | Phase 2 | Pending |
-| PAY-04 | Phase 2 | Pending |
-| PAY-05 | Phase 2 | Pending |
-| PAY-06 | Phase 2 | Pending |
+| LIST-01 | Phase 2 | Complete |
+| LIST-02 | Phase 2 | Complete |
+| LIST-03 | Phase 2 | Complete |
+| LIST-04 | Phase 2 | Complete |
+| LIST-05 | Phase 2 | Complete |
+| LIST-06 | Phase 2 | Complete |
+| LIST-07 | Phase 2 | Complete |
+| PAY-01 | Phase 2 | Complete |
+| PAY-02 | Phase 2 | Complete |
+| PAY-03 | Phase 2 | Complete |
+| PAY-04 | Phase 2 | Complete |
+| PAY-05 | Phase 2 | Complete |
+| PAY-06 | Phase 2 | Complete |
 | ADM-01 | Phase 3 | Complete |
 | ADM-02 | Phase 3 | Complete |
 | ADM-03 | Phase 3 | Complete |
