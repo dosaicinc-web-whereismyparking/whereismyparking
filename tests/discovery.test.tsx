@@ -1,17 +1,31 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET } from '@/app/api/parking/nearby/route';
-import { prisma } from '@/lib/prisma';
 import { NextRequest } from 'next/server';
 
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ParkingList } from '@/components/ParkingList';
+import { ListingForm } from '@/components/ListingForm';
 import { ParkingListing } from '@/lib/supabase-types';
 
-vi.mock('@/lib/prisma', () => ({
-  prisma: {
-    $queryRawUnsafe: vi.fn(),
+vi.mock('@/lib/supabase', () => ({
+  supabase: {
+    auth: {
+      getSession: vi.fn(() => Promise.resolve({ data: { session: null }, error: null })),
+    },
+    rpc: vi.fn(),
   },
 }));
+
+vi.mock('@/components/Map', () => ({
+  ParkingMap: () => <div data-testid="mock-map" />,
+}));
+
+vi.mock('next/link', () => ({
+  default: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
+}));
+
+// Re-import supabase to use the mocked version in tests
+import { supabase } from '@/lib/supabase';
 
 describe('Parking Discovery (Phase 1)', () => {
   const mockParkingData: ParkingListing[] = [
@@ -26,6 +40,7 @@ describe('Parking Discovery (Phase 1)', () => {
       latitude: 12.9716,
       longitude: 77.5946,
       distance: 500,
+      ownerId: 'owner-1',
     },
     {
       id: '2',
@@ -38,6 +53,7 @@ describe('Parking Discovery (Phase 1)', () => {
       latitude: 12.9734,
       longitude: 77.6012,
       distance: 1200,
+      ownerId: 'owner-2',
     },
   ];
 
@@ -138,7 +154,7 @@ describe('Parking Discovery (Phase 1)', () => {
         { id: '1', name: 'Test Parking', distance: 100.5, status: 'ACTIVE' },
         { id: '2', name: 'Other Parking', distance: 200.1, status: 'ACTIVE' },
       ];
-      (prisma.$queryRawUnsafe as any).mockResolvedValue(mockResults);
+      (supabase.rpc as any).mockResolvedValue({ data: mockResults, error: null });
 
       const req = new NextRequest('http://localhost:3000/api/parking/nearby?lat=12.9716&lng=77.5946');
       const response = await GET(req);
@@ -147,20 +163,21 @@ describe('Parking Discovery (Phase 1)', () => {
       expect(response.status).toBe(200);
       expect(data.results).toHaveLength(2);
       expect(data.results[0].distance).toBe(101); // Math.round
-      expect(prisma.$queryRawUnsafe).toHaveBeenCalled();
+      expect(supabase.rpc).toHaveBeenCalledWith('search_nearby_parking', expect.any(Object));
     });
 
     it('filters by type and coverage', async () => {
-      (prisma.$queryRawUnsafe as any).mockResolvedValue([]);
+      (supabase.rpc as any).mockResolvedValue({ data: [], error: null });
       
       const req = new NextRequest('http://localhost:3000/api/parking/nearby?lat=12.9716&lng=77.5946&type=PUBLIC&coverage=COVERED');
       const response = await GET(req);
       
       expect(response.status).toBe(200);
-      // Check if query contains filters
-      const lastQuery = (prisma.$queryRawUnsafe as any).mock.calls.at(-1)[0];
-      expect(lastQuery).toContain('"type" = $5::"ParkingType"');
-      expect(lastQuery).toContain('"coverage" = $6::"CoverageType"');
+      // Check if RPC was called with filters
+      expect(supabase.rpc).toHaveBeenCalledWith('search_nearby_parking', expect.objectContaining({
+        p_type: 'PUBLIC',
+        p_coverage: 'COVERED'
+      }));
     });
   });
 
@@ -176,7 +193,7 @@ describe('Parking Discovery (Phase 1)', () => {
          { id: '1', name: 'P1', distance: 100 },
          { id: '2', name: 'P2', distance: 200 },
        ];
-       (prisma.$queryRawUnsafe as any).mockResolvedValue(mockResults);
+       (supabase.rpc as any).mockResolvedValue({ data: mockResults, error: null });
 
        const req = new NextRequest('http://localhost:3000/api/parking/nearby?lat=12.9716&lng=77.5946&limit=1');
        const response = await GET(req);
@@ -185,6 +202,42 @@ describe('Parking Discovery (Phase 1)', () => {
        expect(response.status).toBe(200);
        expect(data.results).toHaveLength(1);
        expect(data.nextCursor).toBeDefined();
+    });
+  });
+
+  describe('ListingForm Validation', () => {
+    it('PH5-BUG-01: Step 1 cannot progress if name or address are empty', async () => {
+      render(<ListingForm />);
+      
+      const continueBtn = screen.getByRole('button', { name: /continue to map/i });
+      fireEvent.click(continueBtn);
+
+      // Should still be on Step 1 (Basic Information header should be visible)
+      expect(screen.getByText('Basic Information')).toBeInTheDocument();
+      // Error messages should appear
+      await waitFor(() => {
+        expect(screen.getByText(/name must be at least 3 characters/i)).toBeInTheDocument();
+        expect(screen.getByText(/address must be at least 5 characters/i)).toBeInTheDocument();
+      });
+    });
+
+    it('PH5-BUG-01: Progression to Step 2 only occurs when fields are valid', async () => {
+      render(<ListingForm />);
+      
+      const nameInput = screen.getByLabelText(/listing name/i);
+      const addressInput = screen.getByLabelText(/physical address/i);
+      
+      fireEvent.change(nameInput, { target: { value: 'My Parking Spot' } });
+      fireEvent.change(addressInput, { target: { value: '123 Main St, Kochi' } });
+      
+      const continueBtn = screen.getByRole('button', { name: /continue to map/i });
+      fireEvent.click(continueBtn);
+
+      // Should progress to Step 2 (Set Location header should be visible)
+      await waitFor(() => {
+        expect(screen.getByText('Set Location')).toBeInTheDocument();
+      });
+      expect(screen.queryByText('Basic Information')).not.toBeInTheDocument();
     });
   });
 });

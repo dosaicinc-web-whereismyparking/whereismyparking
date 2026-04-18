@@ -1,28 +1,63 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+@theme {
+  /* Airbnb-inspired Color Palette */
+  --color-primary: #2563EB;
+  --color-primary-hover: #1D4ED8;
+  --color-surface: #FFFFFF;
+  --color-background: #F8FAFC;
+  --color-text-main: #0F172A;
+  --color-text-secondary: #64748B;
+  --color-border: #E2E8F0;
+  
+  /* Retaining original colors but updating to design system names */
+  --color-srd-blue: #2563EB;
+  --color-srd-orange: #F97316;
+  --color-srd-bg: #F8FAFC;
+  --color-srd-text: #0F172A;
+  --color-srd-text-muted: #64748B;
+  --color-srd-success: #10B981;
+
+  /* Airbnb-style Spacing & Radii */
+  --radius-airbnb: 12px;
+  --radius-airbnb-lg: 24px;
+  
+  /* Modern Soft Shadows */
+  --shadow-airbnb: 0 6px 16px rgba(0, 0, 0, 0.08);
+  --shadow-airbnb-hover: 0 12px 24px rgba(0, 0, 0, 0.12);
+  --shadow-sticky: 0 -1px 4px rgba(0, 0, 0, 0.04);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+:root {
+  --foreground-rgb: 15, 23, 42; /* #0F172A */
+  --background-rgb: 248, 250, 252; /* #F8FAFC */
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: white;
-  margin: 0;
-  padding: 0;
+  background: rgb(var(--background-rgb));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-html, body, #__next {
-  height: 100%;
+/* Base Component Styles for consistency */
+@layer base {
+  input, button, select, textarea {
+    @apply border-border transition-all duration-200 outline-none;
+  }
+}
+
+/* Airbnb-style Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #E2E8F0;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #CBD5E1;
 }

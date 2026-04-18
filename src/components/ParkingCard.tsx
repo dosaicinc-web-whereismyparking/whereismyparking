@@ -1,6 +1,6 @@
 import React from 'react';
 import { ParkingListing } from '@/lib/supabase-types';
-import { Clock } from 'lucide-react';
+import { Clock, Navigation, Heart } from 'lucide-react';
 import { NavigateButton } from './NavigateButton';
 import OptimizedImage from './Image';
 
@@ -19,49 +19,62 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({
 }) => {
   return (
     <div
-      className={`p-6 transition-all cursor-pointer hover:bg-white relative border-b border-gray-100 ${
-        isSelected ? 'bg-white ring-2 ring-srd-blue ring-inset z-10' : 'bg-transparent'
+      className={`group p-4 transition-all cursor-pointer relative border-b border-border ${
+        isSelected ? 'bg-surface ring-2 ring-primary/20 z-10' : 'bg-transparent hover:bg-gray-50'
       }`}
       onClick={onSelect}
     >
-      {parking.images && parking.images.length > 0 && (
-        <OptimizedImage
-          src={parking.images[0]}
-          alt={parking.name}
-          priority={priority}
-          className="w-full h-32 object-cover rounded-lg mb-4"
-        />
-      )}
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="font-extrabold text-srd-blue">{parking.name}</h3>
-        {parking.distance !== undefined && (
-          <span className="text-[10px] font-black text-srd-orange bg-srd-orange/10 px-2 py-1 rounded">
-            {(parking.distance / 1000).toFixed(1)} km
-          </span>
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-airbnb mb-3">
+        {parking.images && parking.images.length > 0 ? (
+          <OptimizedImage
+            src={parking.images[0]}
+            alt={parking.name}
+            priority={priority}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+            <span className="text-gray-400 text-xs">No image</span>
+          </div>
         )}
+        <button 
+          className="absolute top-3 right-3 p-2 bg-transparent hover:scale-110 transition-transform active:scale-95 text-white drop-shadow-md"
+          onClick={(e) => { e.stopPropagation(); }}
+        >
+          <Heart className="w-6 h-6 stroke-[2px]" />
+        </button>
       </div>
 
-      <p className="text-sm text-gray-600 mb-3">{parking.address}</p>
+      <div className="space-y-1">
+        <div className="flex justify-between items-start gap-2">
+          <h3 className="font-bold text-text-main line-clamp-1">{parking.name}</h3>
+          {parking.distance !== undefined && (
+            <span className="text-sm font-medium text-text-main shrink-0">
+              {(parking.distance / 1000).toFixed(1)} km
+            </span>
+          )}
+        </div>
 
-      <div className="flex flex-wrap gap-2 mb-4">
-        <span className="text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded">
-          {parking.type}
-        </span>
-        <span className="text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded">
-          {parking.coverage}
-        </span>
-        <div className="flex items-center gap-1 text-[10px] text-gray-500">
-          <Clock className="w-3 h-3" />
-          <span>24/7 Available</span>
+        <p className="text-sm text-text-secondary line-clamp-1">{parking.address}</p>
+
+        <div className="flex items-center gap-2 text-xs text-text-secondary pt-1">
+           <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation" focusable="false" className="w-3 h-3 fill-current"><path d="M15.094 1.579l-4.124 8.885-9.86 1.27a1 1 0 0 0-.564 1.764l7.246 6.574-1.899 9.736a1 1 0 0 0 1.489 1.081L16 26.21l8.612 4.683a1 1 0 0 0 1.49-1.081l-1.9-9.736 7.248-6.574a1 1 0 0 0-.563-1.764l-9.86-1.27L16.906 1.58a1 1 0 0 0-1.812 0z"></path></svg>
+           <span className="font-semibold text-text-main">4.8</span>
+           <span className="text-gray-300">•</span>
+           <span>{parking.type}</span>
+           <span className="text-gray-300">•</span>
+           <span>{parking.coverage}</span>
+        </div>
+
+        <div className="pt-3 flex gap-2 overflow-hidden">
+          <NavigateButton
+            latitude={parking.latitude}
+            longitude={parking.longitude}
+            name={parking.name}
+            className="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white py-2 px-4 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95"
+          />
         </div>
       </div>
-
-      <NavigateButton
-        latitude={parking.latitude}
-        longitude={parking.longitude}
-        name={parking.name}
-        className="w-full flex items-center justify-center gap-2 bg-srd-orange hover:bg-srd-orange/90 text-white py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-md active:scale-[0.98]"
-      />
     </div>
   );
 };

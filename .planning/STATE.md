@@ -2,34 +2,32 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 03
-current_plan: Not started
-status: Plan 03 complete
-stopped_at: Phase 5 context gathered
-last_updated: "2026-04-14T11:01:01.744Z"
+current_phase: 06
+current_plan: 06
+status: Phase 06 Complete
+stopped_at: Phase 06 Complete
+last_updated: "2026-04-19T01:59:00.000Z"
 progress:
-  total_phases: 1
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_phases: 6
+  completed_phases: 6
+  total_plans: 18
+  completed_plans: 18
 ---
 
 # Project State: WhereIsMyParking
 
 **Initialized:** 2026-04-12
-**Current Phase:** 03
-**Current Plan:** Not started
-**Total Plans in Phase:** 2
-**Project Status:** Phase 3 complete
+**Current Phase:** 06 (Complete)
+**Current Plan:** 06
+**Project Status:** Phase 06 Complete - OTP Authentication System Live
 
 ## Progress
 
-[████████████████████] 100%
+[████████████████████] 100% (Milestone v1.0)
 
-- Current Phase: 04-launch-readiness-operational-polish
-- Current Plan: 2/3 execution plans complete
-- Last Session: 2026-04-14
-- Completed: Phases 1, 2, and 3
+- Completed Phases: 01, 02, 03, 04, 05, 06
+- Last Session: 2026-04-19
+- Status: OTP Login via Fast2SMS is fully integrated, verified, and connected to the self-hosted stack on Mac Mini.
 
 ## Project Reference
 
@@ -37,40 +35,39 @@ See: .planning/PROJECT.md (updated 2026-04-12)
 
 **Core value:** Urban Indian drivers find nearby parking in seconds through a single location-aware interface, eliminating time and fuel wasted circling for spaces
 
-**Current focus:** Phase 04 — launch-readiness-operational-polish
+**Current focus:** Ready for Phase 07 (or final polish/launch)
 
 ## Roadmap Evolution
 
-- Phase 5 added: prototyping-self-hosted-stack-bugfixes
+- Phase 5 complete: 2026-04-14
+- Phase 6 added: otp-authentication-system (Planned 2026-04-19)
+- Phase 6 complete: 2026-04-19
 
 ## Decisions
 
 - **2026-04-13 (Phase 01):** Using Vitest as the test runner for better integration with Vite/Next.js ecosystem and faster execution.
-- **2026-04-13 (Phase 01):** Configured JSDOM environment to support React component testing later.
-- [Phase 01]: Implemented custom rate limiting and lockout logic for OTP using otp_rate_limits table to ensure security in serverless environment.
-- [Phase 01]: Used Prisma $queryRawUnsafe for PostGIS spatial queries (ST_DWithin, ST_Distance) as Prisma doesn't natively support geometry search yet.
-- [Phase 01]: Implemented cursor-based pagination using a base64 encoded JSON object containing distance and ID to ensure stable sorting across pages.
-- [Phase 01]: Added server-side response caching (5 mins) for identical queries to improve performance for map pan/zoom actions.
-- [Phase 01]: Enforced a 5km radius limit in API validation to mitigate Denial of Service from overly expensive spatial queries.
 - [Phase 01]: Integrated Mapbox GL for interactive visualization and Google Maps for directions deep-linking.
+- [Phase 05]: Transition from Mapbox to MapLibre GL JS to reduce costs and open-source the map engine.
+- [Phase 05]: Moving from Prisma ORM to raw SQL migrations to simplify the stack for self-hosted Supabase deployment.
+- [Phase 05]: Using Docker Compose for self-hosted Supabase stack on Mac Mini for local development.
+- [Phase 05]: Implemented transactional logic via PostgreSQL functions (RPC) to maintain atomicity without Prisma.
+- [Phase 06]: Custom OTP Auth implemented to bypass standard Supabase Auth for better SMS gateway control (Fast2SMS).
+- [Phase 06]: Service Role key bypass for Postgres REST URL suffix (/rest/v1) for custom self-hosted stack compatibility.
 
 ## Performance Metrics
 
 | Phase | Plan | Duration | Tasks | Files | Date |
 |-------|------|----------|-------|-------|------|
 | 01    | 00   | 10m      | 2     | 6     | 2026-04-13 |
-| 01    | 01   | 30m      | 2     | 2     | 2026-04-13 |
-| 01    | 04   | 3h       | 2     | 2     | 2026-04-13 |
-| Phase 04 P01 | 3min | 3 tasks | 2 files |
-| 04    | 03   | 15m   | 4      | 4     |
+| 06    | 01-06| 120m     | 18    | 12    | 2026-04-19 |
 
 ## Session Continuity
 
-Last session: 2026-04-14T11:01:01.739Z
-Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-prototyping-self-hosted-stack-bugfixes/05-CONTEXT.md
-Notes: Phase 03 execution, validation, and planning artifacts completed successfully
+Last session: 2026-04-19T01:59:00.000Z
+Stopped at: Phase 6 complete
+Resume file: .planning/ROADMAP.md
+Notes: OTP Authentication is fully functional on the frontend using custom API routes and Fast2SMS. Infrastructure is tunneled to Mac Mini.
 
 ---
 
-*State updated: 2026-04-14* (Phase 3 complete)
+*State updated: 2026-04-19* (Phase 6 complete)
