@@ -62,6 +62,8 @@ export async function POST(request: NextRequest) {
     }
 
     const otp_hash = hashOtp(otp);
+    console.log('[DEV HASH CHECK] OTP:', otp);
+    console.log('[DEV HASH CHECK] Hash:', otp_hash);
     const expires_at = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000).toISOString();
 
     // 4. Store Session (Direct port 54321 for PostgREST)
@@ -92,7 +94,8 @@ export async function POST(request: NextRequest) {
           otp_hash,
           expires_at,
           last_sent_at: new Date().toISOString(),
-          attempts: 0
+          attempts: 0,
+          ...(process.env.NODE_ENV === 'development' && { plain_otp: otp })
         })
       });
 

@@ -23,7 +23,8 @@ export const supabaseAdmin = supabaseServiceKey
   ? createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
         autoRefreshToken: false,
-        persistSession: false
+        persistSession: false,
+        url: process.env.SUPABASE_AUTH_URL || 'http://127.0.0.1:9999'
       },
       db: { 
         url: supabaseUrl.endsWith('/') ? supabaseUrl.slice(0, -1) : supabaseUrl 
