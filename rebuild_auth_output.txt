@@ -1,0 +1,86 @@
+=== STEP 1: Drop and recreate auth schema ===
+ERROR:  must be owner of schema auth
+=== STEP 2: Stop auth container ===
+supabase-auth
+=== STEP 3: Start auth container ===
+supabase-auth
+=== STEP 4: Wait and check logs ===
+{"level":"info","msg":"GoTrue API started on: :8081","time":"2026-04-18T22:33:39Z"}
+{"component":"api","level":"info","method":"POST","msg":"request started","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","time":"2026-04-18T22:36:44Z","timestamp":"2026-04-18T22:36:44Z"}
+{"component":"api","error":"401: This endpoint requires a Bearer token","level":"info","method":"POST","msg":"401: This endpoint requires a Bearer token","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","time":"2026-04-18T22:36:44Z","timestamp":"2026-04-18T22:36:44Z"}
+{"component":"api","duration":470041,"level":"info","method":"POST","msg":"request completed","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","status":401,"time":"2026-04-18T22:36:44Z","timestamp":"2026-04-18T22:36:44Z"}
+{"component":"api","level":"info","method":"POST","msg":"request started","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","time":"2026-04-18T22:36:54Z","timestamp":"2026-04-18T22:36:54Z"}
+{"component":"api","error":"400: Could not parse request body as JSON: invalid character ':' in string escape code","level":"info","method":"POST","msg":"400: Could not parse request body as JSON: invalid character ':' in string escape code","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","time":"2026-04-18T22:36:54Z","timestamp":"2026-04-18T22:36:54Z"}
+{"component":"api","duration":1111500,"level":"info","method":"POST","msg":"request completed","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","status":400,"time":"2026-04-18T22:36:54Z","timestamp":"2026-04-18T22:36:54Z"}
+{"component":"api","level":"info","method":"POST","msg":"request started","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","time":"2026-04-18T22:40:32Z","timestamp":"2026-04-18T22:40:32Z"}
+{"component":"api","error":"error finding user: ERROR: column users.aud does not exist (SQLSTATE 42703)","level":"error","method":"POST","msg":"500: Database error checking phone","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","time":"2026-04-18T22:40:32Z","timestamp":"2026-04-18T22:40:32Z"}
+{"component":"api","duration":12638667,"level":"info","method":"POST","msg":"request completed","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","status":500,"time":"2026-04-18T22:40:32Z","timestamp":"2026-04-18T22:40:32Z"}
+{"component":"api","level":"info","method":"POST","msg":"request started","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","time":"2026-04-18T22:40:51Z","timestamp":"2026-04-18T22:40:51Z"}
+{"component":"api","error":"error finding user: ERROR: column users.aud does not exist (SQLSTATE 42703)","level":"error","method":"POST","msg":"500: Database error checking phone","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","time":"2026-04-18T22:40:51Z","timestamp":"2026-04-18T22:40:51Z"}
+{"component":"api","duration":1350416,"level":"info","method":"POST","msg":"request completed","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","status":500,"time":"2026-04-18T22:40:51Z","timestamp":"2026-04-18T22:40:51Z"}
+{"level":"info","msg":"received graceful shutdown signal","time":"2026-04-18T22:44:50Z"}
+{"level":"info","msg":"Go runtime metrics collection started","time":"2026-04-18T22:44:50Z"}
+{"component":"pop","level":"info","msg":"Migrations already up to date, nothing to apply","time":"2026-04-18T22:44:50Z"}
+{"args":[0.008465334],"component":"pop","level":"info","msg":"%.4f seconds","time":"2026-04-18T22:44:50Z"}
+{"level":"info","msg":"GoTrue migrations applied successfully","time":"2026-04-18T22:44:50Z"}
+{"component":"api","level":"warning","msg":"DEPRECATION NOTICE: GOTRUE_JWT_ADMIN_GROUP_NAME not supported by Supabase's GoTrue, will be removed soon","time":"2026-04-18T22:44:50Z"}
+{"level":"info","msg":"GoTrue API started on: :8081","time":"2026-04-18T22:44:50Z"}
+{"component":"api","level":"info","method":"POST","msg":"request started","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","time":"2026-04-18T22:45:00Z","timestamp":"2026-04-18T22:45:00Z"}
+{"component":"api","error":"error finding user: ERROR: column users.aud does not exist (SQLSTATE 42703)","level":"error","method":"POST","msg":"500: Database error checking phone","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","time":"2026-04-18T22:45:00Z","timestamp":"2026-04-18T22:45:00Z"}
+{"component":"api","duration":12495000,"level":"info","method":"POST","msg":"request completed","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","status":500,"time":"2026-04-18T22:45:00Z","timestamp":"2026-04-18T22:45:00Z"}
+{"level":"info","msg":"received graceful shutdown signal","time":"2026-04-19T00:10:05Z"}
+{"level":"info","msg":"Go runtime metrics collection started","time":"2026-04-19T00:10:05Z"}
+{"component":"pop","level":"info","msg":"Migrations already up to date, nothing to apply","time":"2026-04-19T00:10:05Z"}
+{"args":[0.008401666],"component":"pop","level":"info","msg":"%.4f seconds","time":"2026-04-19T00:10:05Z"}
+{"level":"info","msg":"GoTrue migrations applied successfully","time":"2026-04-19T00:10:05Z"}
+{"component":"api","level":"warning","msg":"DEPRECATION NOTICE: GOTRUE_JWT_ADMIN_GROUP_NAME not supported by Supabase's GoTrue, will be removed soon","time":"2026-04-19T00:10:05Z"}
+{"level":"info","msg":"GoTrue API started on: :8081","time":"2026-04-19T00:10:05Z"}
+=== STEP 5: Verify auth schema rebuilt ===
+         column_name         
+-----------------------------
+ aud
+ banned_until
+ confirmation_sent_at
+ confirmation_token
+ confirmed_at
+ created_at
+ deleted_at
+ email
+ email_change
+ email_change_confirm_status
+ email_change_sent_at
+ email_change_token_current
+ email_change_token_new
+ email_confirmed_at
+ encrypted_password
+ id
+ instance_id
+ invited_at
+ is_anonymous
+ is_sso_user
+ is_super_admin
+ last_sign_in_at
+ phone
+ phone_change
+ phone_change_sent_at
+ phone_change_token
+ phone_confirmed_at
+ raw_app_meta_data
+ raw_user_meta_data
+ reauthentication_sent_at
+ reauthentication_token
+ recovery_sent_at
+ recovery_token
+ role
+ updated_at
+(35 rows)
+
+=== STEP 6: Test createUser via curl ===
+{
+    "code": 500,
+    "error_code": "unexpected_failure",
+    "msg": "Database error checking phone",
+    "error_id": "8b0acf5f-95b7-4c42-90b1-b883b83d8da6"
+}
+=== STEP 7: Restart Next.js ===
+createUser failed, skipping Next.js restart.

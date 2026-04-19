@@ -1,0 +1,70 @@
+=== STEP 1: Add aud column ===
+NOTICE:  column "aud" of relation "users" already exists, skipping
+ALTER TABLE
+UPDATE 0
+=== STEP 2: List columns ===
+         column_name         
+-----------------------------
+ aud
+ banned_until
+ confirmation_sent_at
+ confirmation_token
+ confirmed_at
+ created_at
+ deleted_at
+ email
+ email_change
+ email_change_confirm_status
+ email_change_sent_at
+ email_change_token_current
+ email_change_token_new
+ email_confirmed_at
+ encrypted_password
+ id
+ instance_id
+ invited_at
+ is_anonymous
+ is_sso_user
+ is_super_admin
+ last_sign_in_at
+ phone
+ phone_change
+ phone_change_sent_at
+ phone_change_token
+ phone_confirmed_at
+ raw_app_meta_data
+ raw_user_meta_data
+ reauthentication_sent_at
+ reauthentication_token
+ recovery_sent_at
+ recovery_token
+ role
+ updated_at
+(35 rows)
+
+=== STEP 4: Add other columns ===
+NOTICE:  column "role" of relation "users" already exists, skipping
+NOTICE:  column "is_sso_user" of relation "users" already exists, skipping
+NOTICE:  column "deleted_at" of relation "users" already exists, skipping
+ALTER TABLE
+NOTICE:  column "banned_until" of relation "users" already exists, skipping
+ALTER TABLE
+NOTICE:  column "reauthentication_token" of relation "users" already exists, skipping
+ALTER TABLE
+NOTICE:  column "reauthentication_sent_at" of relation "users" already exists, skipping
+ALTER TABLE
+NOTICE:  column "is_super_admin" of relation "users" already exists, skipping
+ALTER TABLE
+NOTICE:  column "email_change_confirm_status" of relation "users" already exists, skipping
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+=== STEP 5: Restart Auth ===
+supabase-auth
+=== STEP 6: Test createUser via curl ===
+{
+    "code": 500,
+    "error_code": "unexpected_failure",
+    "msg": "Database error checking phone",
+    "error_id": "1643e531-65d7-4877-a5c8-b7f0192e049c"
+}

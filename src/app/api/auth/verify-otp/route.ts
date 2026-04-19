@@ -64,8 +64,11 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Verify OTP
+    console.log('[DEV VERIFY CHECK] Input OTP:', otp);
+    console.log('[DEV VERIFY CHECK] Stored Hash:', session.otp_hash);
+    console.log('[DEV VERIFY CHECK] Match:', verifyOtpHash(otp, session.otp_hash));
+    
     const isValid = verifyOtpHash(otp, session.otp_hash);
-    console.log('[Auth Verify] Hashing match:', isValid);
     
     if (!isValid) {
       console.log('[Auth Verify] Stored Hash:', session.otp_hash);

@@ -1,0 +1,122 @@
+=== STEP 1: dev.log auth verify ===
+[Auth Verify] Session found: true
+[DEV VERIFY CHECK] Input OTP: 397859
+[DEV VERIFY CHECK] Stored Hash: f9cf6c14e81766f90ef0946054785ef7d0d482981f10a23ec39fcf715514ad69
+[DEV VERIFY CHECK] Match: true
+[Auth Verify] Fatal Error: Error [AuthApiError]: {}
+    at async POST (src/app/api/auth/verify-otp/route.ts:117:53)
+  115 | ...
+  116 | ...user) {
+> 117 | ...st { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+      |                                               ^
+  118 | ...hone,
+  119 | ...hone_confirm: true,
+  120 | ...ser_metadata: { phone_verified: true } {
+  __isAuthError: true,
+  status: 404,
+  code: undefined
+}
+ POST /api/auth/verify-otp 500 in 103ms (next.js: 12ms, application-code: 91ms)
+=========================================
+[DEV OTP] Phone  : +919446976393
+[DEV OTP] OTP    : 359237
+[DEV OTP] Expiry : 5 minutes
+=========================================
+[DEV HASH CHECK] OTP: 359237
+[DEV HASH CHECK] Hash: 6ffe17498179367a257516d3caa031d70f271b26f8371deda70aedc9a8877346
+[DEV SMS BYPASS] OTP 359237 for +919446976393 — skipping real SMS
+ POST /api/auth/send-otp 200 in 34ms (next.js: 1874µs, application-code: 32ms)
+ GET /api/dev/get-otp?phone=%2B919446976393 200 in 9ms (next.js: 1493µs, application-code: 7ms)
+ GET /api/dev/get-otp?phone=%2B919446976393 200 in 14ms (next.js: 925µs, application-code: 13ms)
+ GET /api/dev/get-otp?phone=%2B919446976393 200 in 5ms (next.js: 876µs, application-code: 4ms)
+ GET /api/dev/get-otp?phone=%2B919446976393 200 in 5ms (next.js: 764µs, application-code: 5ms)
+ GET /api/dev/get-otp?phone=%2B919446976393 200 in 6ms (next.js: 705µs, application-code: 5ms)
+[Auth Verify] Session found: true
+[DEV VERIFY CHECK] Input OTP: 359237
+[DEV VERIFY CHECK] Stored Hash: 6ffe17498179367a257516d3caa031d70f271b26f8371deda70aedc9a8877346
+[DEV VERIFY CHECK] Match: true
+[Auth Verify] Fatal Error: Error [AuthApiError]: {}
+    at async POST (src/app/api/auth/verify-otp/route.ts:117:53)
+  115 | ...
+  116 | ...user) {
+> 117 | ...st { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+      |                                               ^
+  118 | ...hone,
+  119 | ...hone_confirm: true,
+  120 | ...ser_metadata: { phone_verified: true } {
+  __isAuthError: true,
+  status: 404,
+  code: undefined
+}
+ POST /api/auth/verify-otp 500 in 509ms (next.js: 55ms, application-code: 453ms)
+
+<--- Last few GCs --->
+
+[26516:0xb6e80c000]   331706 ms: Scavenge 7848.1 (7918.7) -> 7820.1 (7935.5) MB, pooled: 0.0 MB, 34.65 / 0.00 ms (average mu = 0.206, current mu = 0.145) task; 
+[26516:0xb6e80c000]   342067 ms: Mark-Compact (reduce) 7897.4 (7970.5) -> 7687.7 (7704.4) MB, pooled: 0.0 MB, 9507.41 / 163.44 ms (+ 542.8 ms in 109 steps since start of marking, biggest step 7.5 ms, walltime since start of marking 10269 ms) (average mu =
+FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
+----- Native stack trace -----
+
+ 1: 0x106bdf6dc node::OOMErrorHandler(char const*, v8::OOMDetails const&) [/opt/homebrew/Cellar/node/25.6.0/lib/libnode.141.dylib]
+ 2: 0x106eedf80 v8::Utils::ReportOOMFailure(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [/opt/homebrew/Cellar/node/25.6.0/lib/libnode.141.dylib]
+ 3: 0x106eedf38 v8::internal::V8::FatalProcessOutOfMemory(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [/opt/homebrew/Cellar/node/25.6.0/lib/libnode.141.dylib]
+ 4: 0x10709a1c4 v8::internal::Heap::ShouldOptimizeForLoadTime() const [/opt/homebrew/Cellar/node/25.6.0/lib/libnode.141.dylib]
+ 5: 0x10709c750 v8::internal::Heap::OldGenerationConsumedBytes() const [/opt/homebrew/Cellar/node/25.6.0/lib/libnode.141.dylib]
+ 6: 0x10709c5f8 v8::internal::Heap::RecomputeLimits(v8::internal::GarbageCollector, v8::base::TimeTicks) [/opt/homebrew/Cellar/node/25.6.0/lib/libnode.141.dylib]
+ 7: 0x1070aa098 v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags, v8::internal::PerformHeapLimitCheck)::$_1::operator()() const [/opt/homebrew/Cellar/node/25.6.0/lib/libnode.141.dylib]
+ 8: 0x1070a9d3c void heap::base::Stack::SetMarkerAndCallbackImpl<v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags, v8::internal::PerformHeapLimitCheck)::$_1>(heap::base::Stack*, void*, void const*) [/opt/homebrew/Cellar/node/25.6.0/lib/libnode.141.dylib]
+ 9: 0x1076bf74c PushAllRegistersAndIterateStack [/opt/homebrew/Cellar/node/25.6.0/lib/libnode.141.dylib]
+
+=== STEP 2: createUser direct ===
+Note: Unnecessary use of -X or --request, POST is already inferred.
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying 127.0.0.1:9999...
+* Connected to 127.0.0.1 (127.0.0.1) port 9999
+> POST /admin/users HTTP/1.1
+> Host: 127.0.0.1:9999
+> User-Agent: curl/8.7.1
+> Accept: */*
+> Authorization: Bearer ***REMOVED-JWT***
+> Content-Type: application/json
+> Content-Length: 49
+> 
+} [49 bytes data]
+* upload completely sent off: 49 bytes
+< HTTP/1.1 500 Internal Server Error
+< Content-Type: application/json
+< Vary: Origin
+< Date: Sat, 18 Apr 2026 22:40:51 GMT
+< Content-Length: 134
+< 
+{ [134 bytes data]
+100   183  100   134  100    49  27606  10094 --:--:-- --:--:-- --:--:-- 45750
+* Connection #0 to host 127.0.0.1 left intact
+{"code":500,"error_code":"unexpected_failure","msg":"Database error checking phone","error_id":"225fa77c-fed9-4552-ae69-7f6194186ed4"}
+=== STEP 3: auth health ===
+{"version":"vunspecified","name":"GoTrue","description":"GoTrue is a user registration and authentication API"}
+
+=== STEP 4: auth logs ===
+{"level":"info","msg":"Go runtime metrics collection started","time":"2026-04-18T22:33:39Z"}
+{"component":"pop","level":"info","msg":"Migrations already up to date, nothing to apply","time":"2026-04-18T22:33:39Z"}
+{"args":[0.009432417],"component":"pop","level":"info","msg":"%.4f seconds","time":"2026-04-18T22:33:39Z"}
+{"level":"info","msg":"GoTrue migrations applied successfully","time":"2026-04-18T22:33:39Z"}
+{"component":"api","level":"warning","msg":"DEPRECATION NOTICE: GOTRUE_JWT_ADMIN_GROUP_NAME not supported by Supabase's GoTrue, will be removed soon","time":"2026-04-18T22:33:39Z"}
+{"level":"info","msg":"GoTrue API started on: :8081","time":"2026-04-18T22:33:39Z"}
+{"component":"api","level":"info","method":"POST","msg":"request started","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","time":"2026-04-18T22:36:44Z","timestamp":"2026-04-18T22:36:44Z"}
+{"component":"api","error":"401: This endpoint requires a Bearer token","level":"info","method":"POST","msg":"401: This endpoint requires a Bearer token","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","time":"2026-04-18T22:36:44Z","timestamp":"2026-04-18T22:36:44Z"}
+{"component":"api","duration":470041,"level":"info","method":"POST","msg":"request completed","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","status":401,"time":"2026-04-18T22:36:44Z","timestamp":"2026-04-18T22:36:44Z"}
+{"component":"api","level":"info","method":"POST","msg":"request started","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","time":"2026-04-18T22:36:54Z","timestamp":"2026-04-18T22:36:54Z"}
+{"component":"api","error":"400: Could not parse request body as JSON: invalid character ':' in string escape code","level":"info","method":"POST","msg":"400: Could not parse request body as JSON: invalid character ':' in string escape code","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","time":"2026-04-18T22:36:54Z","timestamp":"2026-04-18T22:36:54Z"}
+{"component":"api","duration":1111500,"level":"info","method":"POST","msg":"request completed","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","status":400,"time":"2026-04-18T22:36:54Z","timestamp":"2026-04-18T22:36:54Z"}
+{"component":"api","level":"info","method":"POST","msg":"request started","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","time":"2026-04-18T22:40:32Z","timestamp":"2026-04-18T22:40:32Z"}
+{"component":"api","error":"error finding user: ERROR: column users.aud does not exist (SQLSTATE 42703)","level":"error","method":"POST","msg":"500: Database error checking phone","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","time":"2026-04-18T22:40:32Z","timestamp":"2026-04-18T22:40:32Z"}
+{"component":"api","duration":12638667,"level":"info","method":"POST","msg":"request completed","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","status":500,"time":"2026-04-18T22:40:32Z","timestamp":"2026-04-18T22:40:32Z"}
+{"component":"api","level":"info","method":"POST","msg":"request started","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","time":"2026-04-18T22:40:51Z","timestamp":"2026-04-18T22:40:51Z"}
+{"component":"api","error":"error finding user: ERROR: column users.aud does not exist (SQLSTATE 42703)","level":"error","method":"POST","msg":"500: Database error checking phone","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","time":"2026-04-18T22:40:51Z","timestamp":"2026-04-18T22:40:51Z"}
+{"component":"api","duration":1350416,"level":"info","method":"POST","msg":"request completed","path":"/admin/users","referer":"http://localhost:3000","remote_addr":"192.168.65.1","status":500,"time":"2026-04-18T22:40:51Z","timestamp":"2026-04-18T22:40:51Z"}
+
+=== STEP 6: .env.local on Mac ===
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+SUPABASE_SERVICE_ROLE_KEY=***REMOVED-JWT***
+SUPABASE_AUTH_URL=http://127.0.0.1:9999
