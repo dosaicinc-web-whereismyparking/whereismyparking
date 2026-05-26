@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  supabase-auth:
+    image: supabase/gotrue:v2.151.0
+    container_name: supabase-auth
+    restart: unless-stopped
+    ports:
+      - "9999:9999"
+    environment:
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@10.0.0.2:5432/postgres?sslmode=disable
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "false"
+      GOTRUE_EXTERNAL_PHONE_ENABLED: "true"
+      GOTRUE_SMS_AUTOCONFIRM: "false" # Must send real SMS OTPs in production
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_SITE_URL: ${GOTRUE_SITE_URL}
+      API_EXTERNAL_URL: ${SUPABASE_API_URL}
+      GOTRUE_API_EXTERNAL_URL: ${SUPABASE_API_URL}
+
+  supabase-rest:
+    image: postgrest/postgrest:v12.0.2
+    container_name: supabase-rest
+    restart: unless-stopped
+    ports:
+      - "54321:3000"
+    environment:
+      PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD}@10.0.0.2:5432/postgres?sslmode=disable
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_POOL: 25
+
+  supabase-storage:
+    image: supabase/storage-api:v0.43.12
+    container_name: supabase-storage
+    restart: unless-stopped
+    ports:
+      - "54324:5000"
+    environment:
+      ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      SERVICE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@10.0.0.2:5432/postgres?sslmode=disable
+      FILE_SIZE_LIMIT: 5242880
+      STORAGE_BACKEND: file
+      GLOBAL_S3_BUCKET: parking-assets
+      TENANT_ID: stub
+      AWS_ACCESS_KEY_ID: stub
+      AWS_SECRET_ACCESS_KEY: stub
+      FILE_PATH: /var/lib/storage
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      REGION: local
+    volumes:
+      - supabase-storage:/var/lib/storage
+
+  supabase-meta:
+    image: supabase/postgres-meta:v0.75.0
+    container_name: supabase-meta
+    restart: unless-stopped
+    environment:
+      PG_META_DB_HOST: 10.0.0.2
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: postgres
+      PG_META_DB_USER: postgres
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+
+  supabase-studio:
+    image: supabase/studio:latest
+    container_name: supabase-studio
+    restart: unless-stopped
+    ports:
+      - "54323:3000"
+    depends_on:
+      - supabase-meta
+    environment:
+      STUDIO_PG_META_URL: http://supabase-meta:8080
+      SUPABASE_URL: ${SUPABASE_API_URL}
+      SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      STUDIO_DEFAULT_ORGANIZATION: Local
+      STUDIO_DEFAULT_PROJECT: WhereIsMyParking
+
+volumes:
+  supabase-storage:
