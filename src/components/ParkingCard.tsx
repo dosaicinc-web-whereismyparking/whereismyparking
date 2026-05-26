@@ -10,6 +10,7 @@ interface ParkingCardProps {
   isSelected: boolean;
   onSelect: () => void;
   priority?: boolean;
+  id?: string;
 }
 
 export const ParkingCard: React.FC<ParkingCardProps> = ({
@@ -17,9 +18,11 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({
   isSelected,
   onSelect,
   priority = false,
+  id,
 }) => {
   return (
     <div
+      id={id}
       className={`group p-4 transition-all cursor-pointer relative border-b border-border ${
         isSelected ? 'bg-surface ring-2 ring-primary/20 z-10' : 'bg-transparent hover:bg-gray-50'
       }`}

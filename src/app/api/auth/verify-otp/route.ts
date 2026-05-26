@@ -212,11 +212,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Issue Session
-    const session = generateSession(user);
+    const authSession = generateSession(user);
 
     return NextResponse.json({
       success: true,
-      session,
+      session: authSession,
       isAdmin
     });
 
