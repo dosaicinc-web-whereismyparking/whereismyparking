@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { ParkingList } from '@/components/ParkingList';
 import AuthModal from '@/components/AuthModal';
 import { supabase } from '@/lib/supabase';
 import { ParkingListing, ParkingType, CoverageType } from '@/lib/supabase-types';
-import { Search, Loader2, Map as MapIcon, List as ListIcon, AlertCircle } from 'lucide-react';
+import { Search, Loader2, Map as MapIcon, List as ListIcon, AlertCircle, MapPin } from 'lucide-react';
+
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 
@@ -48,6 +50,108 @@ export default function Home() {
   const [autoSearchEnabled, setAutoSearchEnabled] = useState(true);
   const [lastFetchPosition, setLastFetchPosition] = useState<{lat: number, lng: number} | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+
+  const fetchSuggestions = async (input: string) => {
+    if (input.length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    
+    try {
+      // 1. Search Nominatim with Kerala bias
+      const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(input)}&format=json&limit=5&countrycodes=in&viewbox=74.8,8.0,77.6,12.8&addressdetails=1`;
+      
+      const [nomRes, dbRes] = await Promise.all([
+        fetch(nominatimUrl, { headers: { 'User-Agent': 'WhereIsMyParking/1.0' } }),
+        fetch(`/api/parking/search?q=${encodeURIComponent(input)}`)
+      ]);
+
+      const nomData = await nomRes.json();
+      const dbData = await dbRes.json();
+      
+      // Map local DB results
+      const localResults = (dbData.listings || []).map((item: any) => ({
+        id: `db-${item.id}`,
+        name: item.name,
+        fullName: item.address,
+        lat: item.latitude,
+        lng: item.longitude,
+        source: 'local'
+      }));
+
+      // Map Nominatim results
+      const nominatimResults = (nomData || []).map((item: any) => ({
+        id: `osm-${item.place_id}`,
+        name: item.display_name.split(',').slice(0,2).join(',').trim(),
+        fullName: item.display_name,
+        lat: parseFloat(item.lat),
+        lng: parseFloat(item.lon),
+        source: 'nominatim'
+      }));
+      
+      // Combine results: Local first, then Nominatim
+      const combined = [...localResults, ...nominatimResults].slice(0, 7);
+      setSuggestions(combined);
+      setShowSuggestions(true);
+    } catch (err) {
+      console.error('Fetch suggestions error:', err);
+    }
+  };
+
+  const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    setSelectedIndex(-1);
+    
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchSuggestions(value);
+    }, 300);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex(prev => (prev < suggestions.length ? prev + 1 : prev));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex(prev => (prev > -1 ? prev - 1 : prev));
+    } else if (e.key === 'Enter') {
+      if (selectedIndex === -1) {
+        // Default search
+        handleManualSearch(e as any);
+      } else if (selectedIndex === 0) {
+        // Current location
+        requestLocation();
+        setShowSuggestions(false);
+      } else {
+        handleSelectSuggestion(suggestions[selectedIndex - 1]);
+      }
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSelectSuggestion = (s: any) => {
+    setSearchQuery(s.name);
+    setShowSuggestions(false);
+    
+    const newCenter = {
+      latitude: s.lat,
+      longitude: s.lng,
+      zoom: 14
+    };
+    setMapCenter(newCenter);
+    fetchParking(s.lat, s.lng, filters);
+    setLastFetchPosition({ lat: s.lat, lng: s.lng });
+  };
+
 
   useEffect(() => {
     setMounted(true);
@@ -89,7 +193,8 @@ export default function Home() {
     setLoading(true);
     setError(null);
     try {
-      let url = `/api/parking/nearby?lat=${lat}&lng=${lng}&radius=2000`;
+      let url = `/api/parking/nearby?lat=${lat}&lng=${lng}&radius=5`;
+
       if (f.type !== 'ALL') url += `&type=${f.type}`;
       if (f.coverage !== 'ALL') url += `&coverage=${f.coverage}`;
       
@@ -145,31 +250,38 @@ export default function Home() {
 
   const handleManualSearch = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('[Search] Form submitted, query:', searchQuery);
     if (!searchQuery.trim()) return;
 
     try {
-      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
       const res = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?access_token=${token}&country=IN&limit=1`
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&limit=1&countrycodes=in`,
+        { headers: { 'User-Agent': 'WhereIsMyParking/1.0' } }
       );
       const data = await res.json();
+      console.log('[Search] Nominatim response:', data);
       
-      if (data.features && data.features.length > 0) {
-        const [lng, lat] = data.features[0].center;
-        const newCenter = {
-          latitude: lat,
-          longitude: lng,
-          zoom: 14
-        };
+      if (data && data.length > 0) {
+        const item = data[0];
+        const lat = parseFloat(item.lat);
+        const lng = parseFloat(item.lon);
+        console.log('[Search] Coordinates:', lat, lng);
+        const newCenter = { latitude: lat, longitude: lng, zoom: 14 };
         setMapCenter(newCenter);
+        console.log('[Search] Calling fetchParking...');
         fetchParking(lat, lng, filters);
         setLastFetchPosition({ lat, lng });
+        setAutoSearchEnabled(false);
+      } else {
+        console.log('[Search] No results from Nominatim');
+        setError('Location not found. Try a different search term.');
       }
     } catch (err) {
-      console.error('Search geocoding error:', err);
-      setError('Could not find that location. Please try again.');
+      console.log('[Search] Error:', err);
+      setError('Search failed. Please try again.');
     }
   };
+
 
   const handleSelect = (id: string | null) => {
     setSelectedId(id);
@@ -226,38 +338,116 @@ export default function Home() {
             </Link>
           </div>
           
-          {/* Central Search Bar - Premium Pill Shape */}
-          <div className="flex-1 max-w-xl w-full">
-            <form onSubmit={handleManualSearch} className="group relative">
+          <div className="flex-1 max-w-xl w-full relative z-50">
+            <form suppressHydrationWarning onSubmit={handleManualSearch} className="group">
               <div className="flex items-center bg-white border border-border rounded-full py-2.5 px-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
                 <div className="flex-1 px-4 border-r border-border hidden sm:block">
                   <span className="text-xs font-bold block">Where</span>
-                  <input 
+                   <input 
+                    ref={searchInputRef}
+                    suppressHydrationWarning 
                     type="text" 
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search destinations" 
+                    onChange={handleQueryChange}
+                    onKeyDown={handleKeyDown}
+                    onFocus={() => setShowSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                    placeholder="Search area, city or landmark..." 
                     className="text-sm text-text-main placeholder-text-secondary w-full bg-transparent border-none p-0 focus:ring-0"
                   />
+                  {searchQuery && (
+                    <button 
+                      type="button"
+                      onClick={() => { setSearchQuery(''); setSuggestions([]); }}
+                      className="text-gray-400 hover:text-text-main mr-2"
+                    >
+                      <span className="text-lg">×</span>
+                    </button>
+                  )}
                 </div>
                 <div className="flex-1 px-4 sm:hidden">
-                   <input 
+                   <input
+                    ref={searchInputRef}
+                    suppressHydrationWarning
                     type="text" 
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={handleQueryChange}
+                    onKeyDown={handleKeyDown}
+                    onFocus={() => setShowSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                     placeholder="Where are you going?" 
                     className="text-sm text-text-main placeholder-text-secondary w-full bg-transparent border-none p-0 focus:ring-0"
                   />
+                  {searchQuery && (
+                    <button 
+                      type="button"
+                      onClick={() => { setSearchQuery(''); setSuggestions([]); }}
+                      className="text-gray-400 hover:text-text-main"
+                    >
+                      <span className="text-lg">×</span>
+                    </button>
+                  )}
                 </div>
-                <button 
+                <button suppressHydrationWarning 
                   type="submit" 
                   className="bg-primary text-white p-2.5 rounded-full hover:bg-primary-hover transition-colors shadow-sm ml-2"
                 >
+
                   <Search className="w-4 h-4" />
                 </button>
               </div>
             </form>
+
+
+            {showSuggestions && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-3xl shadow-xl border border-border z-50 overflow-hidden py-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                {/* Nearby Option */}
+                <button
+                  suppressHydrationWarning
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    requestLocation();
+                    setShowSuggestions(false);
+                  }}
+                  className={`w-full text-left px-5 py-3 flex items-center gap-3 transition-colors ${selectedIndex === 0 ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
+                >
+                  <div className="p-2 bg-primary/10 rounded-full text-primary">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <div className="font-semibold text-sm">Nearby Parking</div>
+                </button>
+
+                {suggestions.map((s, index) => (
+                  <button
+                    suppressHydrationWarning
+                    key={s.id}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleSelectSuggestion(s);
+                    }}
+                    onMouseEnter={() => setSelectedIndex(index + 1)}
+                    className={`w-full text-left px-5 py-3 flex items-center gap-3 transition-colors ${selectedIndex === index + 1 ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
+                  >
+                    <div className={`p-2 rounded-full ${s.source === 'local' ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'}`}>
+                      <MapPin className="w-4 h-4 shrink-0" />
+                    </div>
+                    <div className="overflow-hidden">
+                      <div className="text-sm font-bold text-slate-800 truncate flex items-center gap-2">
+                        {s.name}
+                        {s.source === 'local' && (
+                          <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full uppercase tracking-tight">Verified</span>
+                        )}
+                      </div>
+                      <div className="text-xs text-slate-400 truncate mt-0.5">
+                        {s.fullName}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+
           
           {/* User Actions */}
           <div className="flex items-center gap-3">
@@ -272,7 +462,7 @@ export default function Home() {
                   Host your space
                 </Link>
                 <div className="flex items-center gap-2 border border-border rounded-full p-2 pl-4 hover:shadow-md transition-shadow cursor-pointer">
-                   <button 
+                   <button suppressHydrationWarning 
                     onClick={handleLogout}
                     className="text-xs font-bold uppercase tracking-wide px-2"
                   >
@@ -285,13 +475,13 @@ export default function Home() {
               </div>
             ) : (
               <div className="flex items-center gap-1">
-                <button 
+                <button suppressHydrationWarning 
                   onClick={() => setIsAuthModalOpen(true)}
                   className="text-sm font-semibold hover:bg-gray-100 px-4 py-2.5 rounded-full transition-colors hidden sm:block"
                 >
                   Host your space
                 </button>
-                <button 
+                <button suppressHydrationWarning 
                   onClick={() => setIsAuthModalOpen(true)}
                   className="flex items-center gap-2 border border-border rounded-full p-2 hover:shadow-md transition-shadow"
                 >
@@ -321,7 +511,7 @@ export default function Home() {
           
           {/* Search this area button (floating) */}
           <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10">
-            <button 
+            <button suppressHydrationWarning 
               onClick={handleSearchArea}
               className="bg-surface text-text-main px-6 py-2.5 rounded-full shadow-airbnb hover:shadow-airbnb-hover border border-border text-sm font-semibold transition-all flex items-center gap-2 active:scale-95"
             >
@@ -333,21 +523,21 @@ export default function Home() {
           {/* View Mode Toggle - Floating Pill at Bottom */}
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20">
              <div className="flex bg-text-main rounded-full p-1 shadow-lg border border-white/10">
-              <button 
+              <button suppressHydrationWarning 
                 onClick={() => setViewMode('map')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${viewMode === 'map' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'}`}
               >
                 <MapIcon className="w-4 h-4" />
                 Map
               </button>
-              <button 
+              <button suppressHydrationWarning 
                 onClick={() => setViewMode('list')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${viewMode === 'list' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'}`}
               >
                 <ListIcon className="w-4 h-4" />
                 List
               </button>
-              <button 
+              <button suppressHydrationWarning 
                 onClick={() => setViewMode('split')}
                 className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${viewMode === 'split' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'}`}
               >
@@ -369,7 +559,7 @@ export default function Home() {
                     <p className="text-sm text-text-secondary leading-relaxed">Enable location to see parking spots around you on the map.</p>
                   </div>
                 </div>
-                <button 
+                <button suppressHydrationWarning 
                   onClick={requestLocation}
                   className="bg-primary text-white py-3 rounded-xl font-bold hover:bg-primary-hover shadow-sm transition-all active:scale-95"
                 >
@@ -394,7 +584,7 @@ export default function Home() {
               </div>
               <p className="text-text-main font-bold text-lg mb-2">Something went wrong</p>
               <p className="text-text-secondary text-sm mb-6 leading-relaxed">{error}</p>
-              <button 
+              <button suppressHydrationWarning 
                 onClick={() => position && fetchParking(position.latitude, position.longitude, filters)}
                 className="bg-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-primary-hover shadow-sm transition-all"
               >

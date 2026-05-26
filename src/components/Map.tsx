@@ -12,6 +12,8 @@ import Map, {
   LayerProps
 } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import maplibregl from 'maplibre-gl';
+
 import { ParkingListing } from '@/lib/supabase-types';
 
 interface MapProps {
@@ -105,6 +107,14 @@ export const ParkingMap: React.FC<MapProps> = ({
   }), [parkingData]);
 
   useEffect(() => {
+    if (parkingData.length > 0 && mapRef.current) {
+      const bounds = new maplibregl.LngLatBounds();
+      parkingData.forEach(l => bounds.extend([l.longitude, l.latitude]));
+      mapRef.current.fitBounds(bounds, { padding: 50, maxZoom: 15 });
+    }
+  }, [parkingData]);
+
+  useEffect(() => {
     if (mapRef.current) {
       const map = mapRef.current.getMap();
       if (map.getLayer('highlighted-point')) {
@@ -174,7 +184,11 @@ export const ParkingMap: React.FC<MapProps> = ({
         mapStyle={MAP_STYLE}
         style={{ width: '100%', height: '100%' }}
       >
-        <GeolocateControl position="top-left" trackUserLocation />
+        <GeolocateControl 
+          position="top-left" 
+          trackUserLocation 
+          onError={(e) => console.warn('Geolocation error:', e)}
+        />
         <FullscreenControl position="top-left" />
         <NavigationControl position="top-left" />
 

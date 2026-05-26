@@ -43,6 +43,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
       setStep('otp')
       setMessage('OTP sent successfully to your mobile number.')
+      
+      if (process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true') {
+        setOtp('000000');
+      }
     } catch (err: any) {
       setError(err.message)
     } finally {
