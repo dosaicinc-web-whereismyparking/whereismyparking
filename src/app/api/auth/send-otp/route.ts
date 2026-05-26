@@ -16,6 +16,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { phone, isAdmin } = sendOtpSchema.parse(body);
 
+    if (process.env.NODE_ENV === 'development' && 
+        process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true') {
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Dev bypass — no OTP sent' 
+      });
+    }
+
     if (!supabaseAdmin) {
       return NextResponse.json({ error: 'Database connection error' }, { status: 500 });
     }
@@ -66,8 +74,11 @@ export async function POST(request: NextRequest) {
     console.log('[DEV HASH CHECK] Hash:', otp_hash);
     const expires_at = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000).toISOString();
 
-    // 4. Store Session (Direct port 54321 for PostgREST)
-    const dbUrl = `http://127.0.0.1:54321/otp_sessions`;
+    // 4. Store Session via PostgREST
+    // SUPABASE_INTERNAL_URL must point to the Supabase node's private IP on Hetzner
+    // (e.g. http://10.0.0.3:54321). Falls back to localhost for local dev.
+    const supabaseInternal = process.env.SUPABASE_INTERNAL_URL || 'http://127.0.0.1:54321';
+    const dbUrl = `${supabaseInternal}/otp_sessions`;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     try {

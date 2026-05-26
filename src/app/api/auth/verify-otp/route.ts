@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { verifyOtpHash, hashOtp } from '@/lib/crypto';
 import { z } from 'zod';
+import jwt from 'jsonwebtoken';
 
 const verifyOtpSchema = z.object({
   phone: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format'),
@@ -11,17 +12,87 @@ const verifyOtpSchema = z.object({
 const LOCKOUT_MINUTES = 15;
 const MAX_ATTEMPTS = 3;
 
+/**
+ * Manually generate a Supabase-compatible session
+ */
+function generateSession(user: any) {
+  const jwtSecret = process.env.SUPABASE_JWT_SECRET;
+  if (!jwtSecret) throw new Error('Missing SUPABASE_JWT_SECRET');
+
+  const expires_in = 3600;
+  const expires_at = Math.floor(Date.now() / 1000) + expires_in;
+
+  const payload = {
+    aud: 'authenticated',
+    exp: expires_at,
+    sub: user.id,
+    email: user.email,
+    phone: user.phone,
+    app_metadata: user.app_metadata || { provider: 'phone', providers: ['phone'] },
+    user_metadata: user.user_metadata || { phone_verified: true },
+    role: 'authenticated',
+  };
+
+  const token = jwt.sign(payload, jwtSecret);
+
+  return {
+    access_token: token,
+    token_type: 'bearer',
+    expires_in,
+    expires_at,
+    refresh_token: 'manual_' + Math.random().toString(36).substring(7),
+    user
+  };
+}
+
 export async function POST(request: NextRequest) {
+
   try {
     const body = await request.json();
     const { phone, otp } = verifyOtpSchema.parse(body);
+
+    if (process.env.NODE_ENV === 'development' && 
+        process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true') {
+      
+      if (!supabaseAdmin) {
+        return NextResponse.json({ error: 'Database connection error' }, { status: 500 });
+      }
+
+      // Get or create user
+      const { data: userLookup } = await supabaseAdmin.auth.admin.listUsers();
+      let user = userLookup.users.find(u => u.phone === phone);
+      
+      if (!user) {
+        const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+          phone,
+          phone_confirm: true,
+          user_metadata: { phone_verified: true }
+        });
+        if (createError) throw createError;
+        user = newUser.user;
+      }
+      
+      const whitelist = (process.env.ADMIN_WHITELISTED_MOBILES || '').split(',');
+      const isAdmin = whitelist.includes(phone);
+      
+      const session = generateSession(user);
+      
+      return NextResponse.json({
+        success: true,
+        session,
+        isAdmin
+      });
+    }
 
     if (!supabaseAdmin) {
       return NextResponse.json({ error: 'Database connection error' }, { status: 500 });
     }
 
-    // 1. Fetch Session (Using direct port 54321 for PostgREST)
-    const dbBaseUrl = `http://127.0.0.1:54321/otp_sessions`;
+    // 1. Fetch Session via PostgREST
+    // SUPABASE_INTERNAL_URL must point to the Supabase node's private IP on Hetzner
+    // (e.g. http://10.0.0.3:54321). Falls back to localhost for local dev.
+    const supabaseInternal = process.env.SUPABASE_INTERNAL_URL || 'http://127.0.0.1:54321';
+    const dbBaseUrl = `${supabaseInternal}/otp_sessions`;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     let session: any = null;
@@ -128,7 +199,7 @@ export async function POST(request: NextRequest) {
     const isAdmin = whitelist.includes(phone);
 
     if (isAdmin) {
-      await fetch(`http://127.0.0.1:54321/admin_users`, {
+      await fetch(`${supabaseInternal}/admin_users`, {
         method: 'POST',
         headers: {
           'apikey': serviceKey!,
@@ -141,23 +212,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Issue Session
-    const { data: sessionData, error: sessionError } = await supabaseAdmin.auth.admin.createSession({
-      userId: user.id,
-    });
-
-    if (sessionError) throw sessionError;
+    const session = generateSession(user);
 
     return NextResponse.json({
       success: true,
-      session: sessionData.session,
+      session,
       isAdmin
     });
 
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors[0].message }, { status: 400 });
-    }
-    console.error('[Auth Verify] Fatal Error:', error);
-    return NextResponse.json({ error: 'Verification failed' }, { status: 500 });
+    console.error('[Auth Verify] Unhandled:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: String(error) },
+      { status: 500 }
+    );
   }
 }
+

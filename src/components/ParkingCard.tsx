@@ -1,8 +1,9 @@
 import React from 'react';
 import { ParkingListing } from '@/lib/supabase-types';
-import { Clock, Navigation, Heart } from 'lucide-react';
+import { Clock, Navigation, MapPin } from 'lucide-react';
+
 import { NavigateButton } from './NavigateButton';
-import OptimizedImage from './Image';
+
 
 interface ParkingCardProps {
   parking: ParkingListing;
@@ -24,26 +25,13 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({
       }`}
       onClick={onSelect}
     >
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-airbnb mb-3">
-        {parking.images && parking.images.length > 0 ? (
-          <OptimizedImage
-            src={parking.images[0]}
-            alt={parking.name}
-            priority={priority}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
-        ) : (
-          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-            <span className="text-gray-400 text-xs">No image</span>
-          </div>
-        )}
-        <button 
-          className="absolute top-3 right-3 p-2 bg-transparent hover:scale-110 transition-transform active:scale-95 text-white drop-shadow-md"
-          onClick={(e) => { e.stopPropagation(); }}
-        >
-          <Heart className="w-6 h-6 stroke-[2px]" />
-        </button>
+      <div className="flex items-center justify-center w-full h-12 bg-blue-50 rounded-lg mb-3">
+        <MapPin className="w-5 h-5 text-blue-600" />
+        <span className="ml-2 text-sm font-bold text-blue-600 capitalize">
+          {parking.type.toLowerCase()} Parking
+        </span>
       </div>
+
 
       <div className="space-y-1">
         <div className="flex justify-between items-start gap-2">

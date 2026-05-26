@@ -15,7 +15,13 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
-import { ParkingMap } from '@/components/Map';
+import dynamic from 'next/dynamic';
+import Link from 'next/link';
+
+const ParkingMap = dynamic(() => import('@/components/Map').then(mod => mod.ParkingMap), { 
+  ssr: false,
+  loading: () => <div className="w-full h-full bg-gray-100 flex items-center justify-center animate-pulse"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>
+});
 import { supabase } from '@/lib/supabase';
 
 const formSchema = z.object({
