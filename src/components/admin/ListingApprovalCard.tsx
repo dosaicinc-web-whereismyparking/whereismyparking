@@ -20,6 +20,7 @@ interface ListingApprovalCardProps {
   listing: AdminListing;
   onReview: (id: string) => void;
   ctaLabel?: string;
+  isSelected?: boolean;
 }
 
 export function ListingApprovalCard({
