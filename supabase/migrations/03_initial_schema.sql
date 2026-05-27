@@ -212,10 +212,10 @@ CREATE POLICY "Users can update own profile" ON "users"
 -- ADMIN_USERS Table Policies
 -- -----------------------------------------------------------------------------
 
--- Only existing admins can see the admin list
+-- Only existing admins can see the admin list (direct check avoids infinite recursion)
 CREATE POLICY "Admins can read admin_users" ON "admin_users"
     FOR SELECT USING (
-        EXISTS (SELECT 1 FROM admin_users WHERE "userId" = auth.uid()::text)
+        "userId" = auth.uid()::text
     );
 
 -- -----------------------------------------------------------------------------
