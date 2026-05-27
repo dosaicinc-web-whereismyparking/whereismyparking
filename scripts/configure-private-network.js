@@ -32,22 +32,12 @@ async function run() {
       }
       console.log(`   - Found private interface: "${iface}"`);
       
-      const IP_MAP = {
-        '49.12.37.22': '10.0.0.2',
-        '178.104.191.198': '10.0.0.3',
-        '178.105.209.94': '10.0.0.4',
-        '178.105.223.164': '10.0.0.5'
-      };
-      
-      const privateIp = IP_MAP[ip];
       const netplanLines = [
         "network:",
         "  version: 2",
         "  ethernets:",
         `    ${iface}:`,
-        "      dhcp4: no",
-        "      addresses:",
-        `        - ${privateIp}/16`
+        "      dhcp4: true"
       ];
       
       console.log(`   - Writing netplan config to /etc/netplan/60-private.yaml...`);
