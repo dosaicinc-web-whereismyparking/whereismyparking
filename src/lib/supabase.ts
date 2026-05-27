@@ -1,12 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
-}
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 // Custom fetch to strip /rest/v1 for installations without Kong
 const supabaseFetch: typeof fetch = (url, options) => {
@@ -17,45 +9,67 @@ const supabaseFetch: typeof fetch = (url, options) => {
   return fetch(url, options);
 };
 
-// Client for general use (respects RLS)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-  },
-  global: {
-    fetch: supabaseFetch
+/**
+ * Lazily create Supabase clients so that importing this module at build time
+ * (during `next build`) does NOT throw when env vars are absent.
+ * Env vars are only required at runtime when the client is actually used.
+ */
+function createSupabaseClient(): SupabaseClient {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) {
+    throw new Error('[Supabase] Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
   }
+  const client = createClient(url, key, {
+    auth: { persistSession: true },
+    global: { fetch: supabaseFetch },
+  });
+  // Override auth URL for standalone GoTrue (no-Kong)
+  if (typeof window === 'undefined') {
+    const authUrl = process.env.SUPABASE_AUTH_URL || 'http://127.0.0.1:9999';
+    (client.auth as any).url = authUrl;
+  }
+  return client;
+}
+
+function createSupabaseAdminClient(): SupabaseClient | null {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) return null;
+  const client = createClient(url, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+    global: { fetch: supabaseFetch },
+  });
+  // Override auth URL for standalone GoTrue (no-Kong)
+  const authUrl = process.env.SUPABASE_AUTH_URL || 'http://127.0.0.1:9999';
+  (client.auth as any).url = authUrl;
+  if (typeof window === 'undefined') {
+    console.log('[Supabase] Admin client initialized for:', url);
+  }
+  return client;
+}
+
+// Singleton instances — created on first import at runtime, not at build time.
+let _supabase: SupabaseClient | null = null;
+let _supabaseAdmin: SupabaseClient | null | undefined = undefined;
+
+export const supabase: SupabaseClient = new Proxy({} as SupabaseClient, {
+  get(_target, prop) {
+    if (!_supabase) _supabase = createSupabaseClient();
+    return (_supabase as any)[prop];
+  },
 });
 
-// Client for administrative use (bypasses RLS)
-export const supabaseAdmin = supabaseServiceKey 
-  ? createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-      global: {
-        fetch: supabaseFetch
-      }
-    })
-  : null;
-
-
-
-// Manually override the auth URL for standalone GoTrue (no-Kong setup)
-// Both the admin client and the regular client need this so that server-side
-// auth.getUser(token) calls reach GoTrue (port 9999) not PostgREST (port 54321).
-if (supabaseAdmin) {
-  const authUrl = process.env.SUPABASE_AUTH_URL || 'http://127.0.0.1:9999';
-  (supabaseAdmin.auth as any).url = authUrl;
+export function getSupabaseAdmin(): SupabaseClient | null {
+  if (_supabaseAdmin === undefined) _supabaseAdmin = createSupabaseAdminClient();
+  return _supabaseAdmin;
 }
 
-// Override for the regular client (server-side only)
-if (typeof window === 'undefined') {
-  const authUrl = process.env.SUPABASE_AUTH_URL || 'http://127.0.0.1:9999';
-  (supabase.auth as any).url = authUrl;
-}
-
-if (typeof window === 'undefined' && supabaseAdmin) {
-  console.log('[Supabase] Admin client initialized for:', supabaseUrl);
-}
+// Keep backward compat export — will be null if service key not set
+export const supabaseAdmin: SupabaseClient | null = new Proxy({} as SupabaseClient, {
+  get(_target, prop) {
+    const admin = getSupabaseAdmin();
+    if (!admin) return undefined;
+    return (admin as any)[prop];
+  },
+}) as unknown as SupabaseClient | null;
