@@ -60,13 +60,13 @@ async function deploy() {
   console.log('--- Step 1: Configuring db-primary (Postgres + PostGIS) ---');
   
   // Start Postgres container
-  const pgStartCmd = `docker pull postgis/postgis:15-3.4 && docker rm -f postgres || true && docker run -d --name postgres -v pgdata:/var/lib/postgresql/data -e POSTGRES_PASSWORD=${DEPLOY_CONFIG.postgresPassword} -p 5432:5432 --restart always postgis/postgis:15-3.4`;
+  const pgStartCmd = `docker pull supabase/postgres:15.14.1.129 && docker rm -f postgres || true && docker volume rm pgdata || true && docker run -d --name postgres -v pgdata:/var/lib/postgresql/data -e POSTGRES_PASSWORD=${DEPLOY_CONFIG.postgresPassword} -p 5432:5432 --restart always supabase/postgres:15.14.1.129`;
   runSsh(DEPLOY_CONFIG.dbPrimaryIp, pgStartCmd);
   console.log('✅ Postgres container started on db-primary.');
 
-  // Wait for database to be ready
-  console.log('Waiting 10 seconds for database to start...');
-  await new Promise(r => setTimeout(r, 10000));
+  // Wait for database to be ready and initialize schemas
+  console.log('Waiting 45 seconds for database to start and initialize schemas...');
+  await new Promise(r => setTimeout(r, 45000));
 
   // Collect migration SQLs in order
   console.log('Reading migration files...');

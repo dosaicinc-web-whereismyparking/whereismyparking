@@ -52,7 +52,9 @@ async function fetchWithRetry(query, retries = 3) {
         method: 'POST',
         body: `data=${encodeURIComponent(query)}`,
         headers: { 
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'WhereIsMyParking-Import/1.0',
+          'Accept': 'application/json'
         }
       });
       
@@ -130,6 +132,10 @@ async function insertListings(elements, districtName) {
     if (insertRes.ok) {
       inserted++;
     } else {
+      if (skipped === 0) {
+        const errBody = await insertRes.text();
+        console.log(`\n    [DB ERROR]: ${insertRes.status} ${errBody}`);
+      }
       skipped++;
     }
   }

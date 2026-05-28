@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-
+import { createBrowserClient } from '@supabase/ssr'
 // Custom fetch to strip /rest/v1 for installations without Kong
 const supabaseFetch: typeof fetch = (url, options) => {
   if (url.toString().includes('/rest/v1/')) {
@@ -20,10 +20,18 @@ function createSupabaseClient(): SupabaseClient {
   if (!url || !key) {
     throw new Error('[Supabase] Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
   }
-  const client = createClient(url, key, {
-    auth: { persistSession: true },
-    global: { fetch: supabaseFetch },
-  });
+  let client;
+  if (typeof window !== 'undefined') {
+    // Use the client-side createBrowserClient
+    client = createBrowserClient(url, key, {
+      global: { fetch: supabaseFetch },
+    });
+  } else {
+    client = createClient(url, key, {
+      auth: { persistSession: false },
+      global: { fetch: supabaseFetch },
+    });
+  }
   // Override auth URL for standalone GoTrue (no-Kong)
   if (typeof window === 'undefined') {
     const authUrl = process.env.SUPABASE_AUTH_URL || 'http://127.0.0.1:9999';

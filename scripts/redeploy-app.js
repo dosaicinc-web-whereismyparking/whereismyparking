@@ -7,8 +7,8 @@ const path = require('path');
 const fs = require('fs');
 
 const APP_NODES = [
-  { name: 'app-1', ip: '178.105.209.94' },
-  { name: 'app-2', ip: '178.105.223.164' }
+  { name: 'app-1', ip: '178.105.209.94' }
+  // { name: 'app-2', ip: '178.105.223.164' } // Currently unreachable
 ];
 
 const SSH_KEY = 'C:\\Users\\ACER\\.ssh\\id_ed25519';
@@ -105,6 +105,10 @@ async function redeployNode(node) {
     '--env-file ~/app/.env.production',
     'whereismyparking:latest'
   ].join(' '));
+
+  // Sync static assets for Nginx cache proxy to work correctly
+  console.log('Syncing Next.js static assets for Nginx...');
+  runSsh(node.ip, 'mkdir -p ~/app/.next && docker cp whereismyparking-app:/app/.next/static ~/app/.next/');
 
   console.log(`✅ ${node.name} redeployed successfully.`);
 }
