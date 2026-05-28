@@ -42,7 +42,7 @@ export async function middleware(request: NextRequest) {
 
   // 1. Basic Auth Check
   if ((isProtectedRoute || isAdminRoute) && !user) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   // 2. 30-Day Policy Logic (optional but good for strict security)
@@ -56,7 +56,7 @@ export async function middleware(request: NextRequest) {
     const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
 
     if (Date.now() - issuedAt > thirtyDaysMs) {
-      const redirectRes = NextResponse.redirect(new URL('/login?reason=session_expired', request.url));
+      const redirectRes = NextResponse.redirect(new URL('/?reason=session_expired', request.url));
       // Sign out to clear server-side session state
       await supabase.auth.signOut();
       return redirectRes;

@@ -1,54 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_INTERNAL_URL;
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+function buildHeaders() {
+  return {
+    'apikey': SERVICE_KEY!,
+    'Authorization': `Bearer ${SERVICE_KEY}`,
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+  };
+}
 
 export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get('q') || '';
-  
+
   if (q.length < 2) {
     return NextResponse.json({ listings: [] });
   }
-  
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  
+
+  if (!SUPABASE_URL || !SERVICE_KEY) {
+    console.error('[Search API] Missing env vars');
+    return NextResponse.json({ listings: [] });
+  }
+
   try {
-    // PostgREST standalone on Mac Mini doesn't use /rest/v1 prefix
-    const baseUrl = supabaseUrl.replace(/\/rest\/v1\/?$/, '');
-    
-    // We use raw fetch with application/geo+json header to extract lat/lng from PostGIS location
-    const res = await fetch(
-      `${baseUrl}/parking_listings?` +
-      `or=(name.ilike.%${q}%,address.ilike.%${q}%)&` +
-      `status=eq.ACTIVE&` +
-      `select=id,name,address,location&` +
-      `limit=5`,
-      {
-        headers: {
-          'apikey': supabaseKey,
-          'Authorization': `Bearer ${supabaseKey}`,
-          'Accept': 'application/geo+json'
-        }
-      }
-    );
-    
+    const res = await fetch(`${SUPABASE_URL}/rpc/search_parking`, {
+      method: 'POST',
+      headers: buildHeaders(),
+      body: JSON.stringify({ p_query: q, p_limit: 8 }),
+      signal: AbortSignal.timeout(4000),
+    });
+
     if (!res.ok) {
       const errorText = await res.text();
-      console.error('[Search API] Fetch error:', errorText);
+      console.error('[Search API] RPC fetch error:', res.status, errorText);
       return NextResponse.json({ listings: [] });
     }
-    
-    const geojson = await res.json();
-    const listings = (geojson.features || []).map((f: any) => ({
-      id: f.properties.id,
-      name: f.properties.name,
-      address: f.properties.address,
-      longitude: f.geometry.coordinates[0],
-      latitude: f.geometry.coordinates[1]
-    }));
-    
+
+    const rows = await res.json();
+
+    const listings = Array.isArray(rows) && rows.length > 0
+      ? rows.map((r: any) => ({
+          id: r.id,
+          name: r.name,
+          address: r.address,
+          latitude: r.latitude ? parseFloat(r.latitude) : null,
+          longitude: r.longitude ? parseFloat(r.longitude) : null,
+        }))
+      : [];
+
     return NextResponse.json({ listings });
-  } catch (err) {
-    console.error('[Search API] Exception:', err);
+  } catch (err: any) {
+    if (err.name === 'TimeoutError') {
+      console.error('[Search API] Timeout');
+    } else {
+      console.error('[Search API] Exception:', err);
+    }
     return NextResponse.json({ listings: [] });
   }
 }

@@ -35,6 +35,64 @@ function buildResponse(results: any[], nextCursor: string | null, source: string
   return response;
 }
 
+async function fetchParking(lat: number, lng: number, radius: number, type: any, coverage: any, limit: number, cursorDistance: number | null, cursorId: string | null) {
+  // ── TIER 1: PostGIS RPC (search_nearby_parking) ──────────────────────────
+  try {
+    const { data: rpcResults, error: rpcError } = await supabase.rpc('search_nearby_parking', {
+      p_lng: lng,
+      p_lat: lat,
+      p_radius: radius * 1000,   // metres
+      p_limit: limit + 1,
+      p_type: type || null,
+      p_coverage: coverage || null,
+      p_cursor_distance: cursorDistance,
+      p_cursor_id: cursorId,
+    });
+
+    if (!rpcError && Array.isArray(rpcResults)) {
+      return rpcResults.map((r: any) => ({ ...r, distance: Math.round(Number(r.distance)) }));
+    }
+    console.warn('[Nearby API] RPC failed, trying bbox fallback:', rpcError?.message);
+  } catch (ex) {
+    console.warn('[Nearby API] RPC threw, trying bbox fallback:', String(ex));
+  }
+
+  // ── TIER 2: Bounding-box RPC ─────────────
+  try {
+    const { data: bboxResults, error: bboxError } = await supabase.rpc('search_parking_bbox', {
+      p_lat: lat,
+      p_lng: lng,
+      p_radius_km: radius,
+      p_type: type || null,
+      p_coverage: coverage || null,
+      p_limit: Math.min(limit * 3, 300),
+    });
+
+    if (!bboxError && Array.isArray(bboxResults)) {
+      const radiusMetres = radius * 1000;
+      const withDist = bboxResults
+        .map((r: any) => ({
+          ...r,
+          distance: Math.round(haversineMetres(lat, lng, Number(r.latitude), Number(r.longitude))),
+        }))
+        .filter((r) => r.distance <= radiusMetres)
+        .sort((a, b) => a.distance - b.distance || a.id.localeCompare(b.id));
+
+      const afterCursor = withDist.filter((r) => {
+        if (cursorDistance === null) return true;
+        return r.distance > cursorDistance || (r.distance === cursorDistance && r.id > (cursorId ?? ''));
+      });
+
+      return afterCursor.slice(0, limit + 1);
+    }
+    console.warn('[Nearby API] bbox RPC also failed:', bboxError?.message);
+  } catch (ex2) {
+    console.warn('[Nearby API] bbox RPC threw:', String(ex2));
+  }
+
+  return [];
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const params = Object.fromEntries(searchParams);
@@ -61,93 +119,34 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // ── TIER 1: PostGIS RPC (search_nearby_parking) ──────────────────────────
-  try {
-    const { data: rpcResults, error: rpcError } = await supabase.rpc('search_nearby_parking', {
-      p_lng: lng,
-      p_lat: lat,
-      p_radius: radius * 1000,   // metres
-      p_limit: limit + 1,
-      p_type: type || null,
-      p_coverage: coverage || null,
-      p_cursor_distance: cursorDistance,
-      p_cursor_id: cursorId,
-    });
+  // Adaptive radius logic
+  let results = await fetchParking(lat, lng, radius, type, coverage, limit, cursorDistance, cursorId);
 
-    if (!rpcError && Array.isArray(rpcResults)) {
-      let nextCursor: string | null = null;
-      if (rpcResults.length > limit) {
-        const last = rpcResults[limit - 1];
-        nextCursor = Buffer.from(
-          JSON.stringify({ distance: Number(last.distance), id: last.id })
-        ).toString('base64');
-        rpcResults.pop();
-      }
-      return buildResponse(
-        rpcResults.map((r: any) => ({ ...r, distance: Math.round(Number(r.distance)) })),
-        nextCursor,
-        'rpc'
-      );
+  // If less than 3 results, expand radius automatically
+  if (results.length < 3 && radius <= 5) {
+    results = await fetchParking(lat, lng, 10, type, coverage, limit, cursorDistance, cursorId);
+    if (results.length < 3) {
+      results = await fetchParking(lat, lng, 20, type, coverage, limit, cursorDistance, cursorId);
     }
-
-    console.warn('[Nearby API] RPC failed, trying bbox fallback:', rpcError?.message);
-  } catch (ex) {
-    console.warn('[Nearby API] RPC threw, trying bbox fallback:', String(ex));
   }
 
-  // ── TIER 2: Bounding-box RPC (extract lat/lng from geometry) ─────────────
-  // Uses a lightweight inline RPC that extracts coordinates server-side
-  try {
-    const { data: bboxResults, error: bboxError } = await supabase.rpc('search_parking_bbox', {
-      p_lat: lat,
-      p_lng: lng,
-      p_radius_km: radius,
-      p_type: type || null,
-      p_coverage: coverage || null,
-      p_limit: Math.min(limit * 3, 300), // Fetch more, filter in JS
-    });
-
-    if (!bboxError && Array.isArray(bboxResults)) {
-      const radiusMetres = radius * 1000;
-      const withDist = bboxResults
-        .map((r: any) => ({
-          ...r,
-          distance: Math.round(haversineMetres(lat, lng, Number(r.latitude), Number(r.longitude))),
-        }))
-        .filter((r) => r.distance <= radiusMetres)
-        .sort((a, b) => a.distance - b.distance || a.id.localeCompare(b.id));
-
-      const afterCursor = withDist.filter((r) => {
-        if (cursorDistance === null) return true;
-        return r.distance > cursorDistance || (r.distance === cursorDistance && r.id > (cursorId ?? ''));
-      });
-
-      const page = afterCursor.slice(0, limit + 1);
-      let nextCursor: string | null = null;
-      if (page.length > limit) {
-        const last = page[limit - 1];
-        nextCursor = Buffer.from(JSON.stringify({ distance: last.distance, id: last.id })).toString('base64');
-        page.pop();
-      }
-
-      return buildResponse(page, nextCursor, 'bbox');
-    }
-
-    console.warn('[Nearby API] bbox RPC also failed:', bboxError?.message);
-  } catch (ex2) {
-    console.warn('[Nearby API] bbox RPC threw:', String(ex2));
+  if (results.length === 0) {
+     return NextResponse.json(
+      { results: [], nextCursor: null, source: 'fallback' },
+      { status: 200 }
+    );
   }
 
-  // ── TIER 3: Total fallback — empty results with clear error ───────────────
-  console.error('[Nearby API] All query strategies failed. Supabase may be down.');
-  return NextResponse.json(
-    {
-      results: [],
-      error: 'Database unavailable. Please try again shortly.',
-      nextCursor: null,
-    },
-    { status: 503 }
-  );
+  let nextCursor: string | null = null;
+  if (results.length > limit) {
+    const last = results[limit - 1];
+    nextCursor = Buffer.from(
+      JSON.stringify({ distance: last.distance, id: last.id })
+    ).toString('base64');
+    results.pop(); // Remove the extra item used for cursor check
+  }
+
+  return buildResponse(results, nextCursor, 'rpc');
 }
 
 export async function OPTIONS() {

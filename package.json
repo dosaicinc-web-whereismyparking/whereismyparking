@@ -26,6 +26,7 @@
     "@tailwindcss/postcss": "^4.2.2",
     "autoprefixer": "^10.4.27",
     "axios": "^1.15.0",
+    "clsx": "^2.1.1",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.8.0",
     "maplibre-gl": "^5.23.0",
@@ -37,6 +38,7 @@
     "react-dom": "^19.2.5",
     "react-hook-form": "^7.72.1",
     "react-map-gl": "^8.1.1",
+    "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.2.2",
     "zod": "^4.3.6"
   }
