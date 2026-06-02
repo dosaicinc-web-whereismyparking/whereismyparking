@@ -113,11 +113,38 @@ async function redeployNode(node) {
   console.log(`✅ ${node.name} redeployed successfully.`);
 }
 
+async function purgeCloudflareCache() {
+  // Read CF credentials from setup-cloudflare.js constants (source of truth)
+  const CF_TOKEN = 'cfut_PnQ1xFWoyQ6YagUm0pS9dHyEvAMDDKYF1WDqZrSPf7b77454';
+  const ZONE_ID  = 'bc5bb34362fc41afd02c80de73001192';
+
+  console.log('\n🌐 Purging Cloudflare cache...');
+  try {
+    const res = await fetch(`https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/purge_cache`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${CF_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ purge_everything: true }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      console.log('✅ Cloudflare cache purged successfully.');
+    } else {
+      console.warn('⚠️  Cloudflare cache purge failed:', JSON.stringify(data.errors));
+    }
+  } catch (err) {
+    console.warn('⚠️  Cloudflare cache purge error:', err.message);
+  }
+}
+
 async function main() {
   console.log('🔄 Fast app redeploy starting...\n');
 
   // Redeploy both nodes in parallel
   await Promise.all(APP_NODES.map(n => redeployNode(n)));
+
+  // Purge Cloudflare cache after every deploy to prevent stale chunk 404s on mobile/desktop.
+  // Stale CF cache entries cause "This page couldn't load" errors after builds change chunk names.
+  await purgeCloudflareCache();
 
   console.log('\n🎉 Both app nodes redeployed!');
   console.log('Waiting 15s for containers to start, then checking health...');

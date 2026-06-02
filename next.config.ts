@@ -14,12 +14,25 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        // Apply no-cache to all page routes (not static assets)
+        // Immutable cache for hashed static assets — safe because filenames change each build
+        source: '/_next/static/:path*',
+        headers: [
+          { key: 'Cache-Control',              value: 'public, max-age=31536000, immutable' },
+          { key: 'CDN-Cache-Control',          value: 'public, max-age=31536000, immutable' },
+          { key: 'Cloudflare-CDN-Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
+        // All page routes: never cache in browser or CDN.
+        // Prevents stale chunk references after deploys ("This page couldn't load",
+        // "Failed to find Server Action" errors on mobile and desktop).
         source: '/((?!_next/static|_next/image|favicon.ico).*)',
         headers: [
-          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
-          { key: 'Pragma',        value: 'no-cache' },
-          { key: 'Expires',       value: '0' },
+          { key: 'Cache-Control',              value: 'no-store, no-cache, must-revalidate' },
+          { key: 'CDN-Cache-Control',          value: 'no-store' },
+          { key: 'Cloudflare-CDN-Cache-Control', value: 'no-store' },
+          { key: 'Pragma',                     value: 'no-cache' },
+          { key: 'Expires',                    value: '0' },
         ],
       },
     ]
