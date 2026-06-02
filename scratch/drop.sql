@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS search_parking(TEXT, INTEGER);

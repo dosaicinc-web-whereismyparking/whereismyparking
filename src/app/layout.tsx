@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   description: "Discover nearby parking spaces in urban India. Public and private parking available.",
   keywords: ["parking", "India", "urban", "GPS"],
   authors: [{ name: "WhereIsMyParking" }],
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover",
   openGraph: {
     title: "WhereIsMyParking - Find Parking in India",
     description: "Discover nearby parking spaces in urban India. Public and private parking available.",
@@ -32,7 +33,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className} suppressHydrationWarning>{children}</body>
+      <head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+        />
+      </head>
+      <body
+        className={`${inter.className} h-screen overflow-hidden`}
+        suppressHydrationWarning
+      >
+        {children}
+      </body>
     </html>
   );
 }
