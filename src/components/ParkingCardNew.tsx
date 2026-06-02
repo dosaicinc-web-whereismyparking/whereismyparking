@@ -1,0 +1,100 @@
+'use client';
+import { Navigation, Clock } from 'lucide-react';
+
+interface ParkingListing {
+  id: string;
+  name: string;
+  address: string;
+  latitude?: number;
+  longitude?: number;
+  distance?: number;
+  distance_km?: number;
+  type?: string;
+  coverage?: string;
+}
+
+export default function ParkingCardNew({
+  listing,
+}: {
+  listing: ParkingListing;
+}) {
+  const dist = listing.distance_km || (listing.distance ? listing.distance / 1000 : undefined);
+  const distLabel = !dist
+    ? null
+    : dist < 1
+      ? `${Math.round(dist * 1000)}m`
+      : `${dist.toFixed(1)}km`;
+
+  const mapsUrl =
+    listing.latitude && listing.longitude
+      ? `https://www.google.com/maps/dir/?api=1&destination=${listing.latitude},${listing.longitude}`
+      : null;
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-3 overflow-hidden w-full active:scale-[0.98] transition-transform duration-150">
+      <div className="p-4">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-gray-900 text-[15px] leading-snug line-clamp-2">
+              {listing.name}
+            </h3>
+            <p className="text-[13px] text-gray-500 mt-1 line-clamp-1 truncate">
+              {listing.address}
+            </p>
+          </div>
+          {distLabel && (
+            <span className="flex-shrink-0 text-[11px] font-bold text-[#1A4A8A] bg-blue-50 px-2.5 py-1.5 rounded-full whitespace-nowrap">
+              {distLabel}
+            </span>
+          )}
+        </div>
+
+        {/* Tags */}
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          {listing.type && (
+            <span
+              className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${
+                listing.type === 'PUBLIC'
+                  ? 'bg-green-50 text-green-700'
+                  : 'bg-orange-50 text-orange-700'
+              }`}
+            >
+              {listing.type === 'PUBLIC' ? 'Public' : 'Private'}
+            </span>
+          )}
+          {listing.coverage && (
+            <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">
+              {listing.coverage === 'COVERED'
+                ? 'Covered'
+                : listing.coverage === 'MULTI'
+                  ? 'Multi-level'
+                  : 'Open air'}
+            </span>
+          )}
+          <span className="text-[11px] text-amber-600 font-medium flex items-center gap-1 ml-auto">
+            <Clock className="w-3 h-3 flex-shrink-0" />
+            Check on arrival
+          </span>
+        </div>
+
+        {/* Navigate Button */}
+        {mapsUrl ? (
+          <a
+            href={mapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full bg-[#F97316] text-white font-semibold text-sm py-3 rounded-xl transition-colors active:bg-orange-600 min-h-[48px]"
+          >
+            <Navigation className="w-4 h-4" />
+            Navigate with Google Maps
+          </a>
+        ) : (
+          <div className="flex items-center justify-center gap-2 w-full bg-gray-100 text-gray-400 font-semibold text-sm py-3 rounded-xl min-h-[48px]">
+            Location unavailable
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

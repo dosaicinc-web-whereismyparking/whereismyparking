@@ -1,0 +1,1 @@
+docker exec postgres psql -U postgres -c 'SELECT status, COUNT(*) FROM parking_listings GROUP BY status;' && docker exec postgres psql -U postgres -c 'SELECT COUNT(*) FROM otp_sessions;' && docker exec postgres psql -U postgres -c 'SELECT proname FROM pg_proc WHERE proname IN (''search_nearby_parking'', ''search_parking_bbox'');'
