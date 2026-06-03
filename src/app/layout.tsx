@@ -1,15 +1,23 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#1A4A8A",
+};
 
 export const metadata: Metadata = {
   title: "WhereIsMyParking - Find Parking in India",
   description: "Discover nearby parking spaces in urban India. Public and private parking available.",
   keywords: ["parking", "India", "urban", "GPS"],
   authors: [{ name: "WhereIsMyParking" }],
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover",
   openGraph: {
     title: "WhereIsMyParking - Find Parking in India",
     description: "Discover nearby parking spaces in urban India. Public and private parking available.",
@@ -34,13 +42,16 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
         />
+        <meta name="theme-color" content="#1A4A8A" />
       </head>
       <body
-        className={`${inter.className} h-screen overflow-hidden`}
+        className={`${inter.className}`}
         suppressHydrationWarning
       >
         {children}

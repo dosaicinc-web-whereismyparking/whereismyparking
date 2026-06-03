@@ -19,27 +19,27 @@ export default function BottomNav() {
       className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200"
       style={{
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-        height: 'calc(64px + env(safe-area-inset-bottom, 0px))',
+        height: 'calc(56px + env(safe-area-inset-bottom, 0px))',
       }}
     >
-      <div className="flex h-16">
+      <div className="flex h-14">
         {tabs.map(({ href, icon: Icon, label }) => {
           const active = pathname === href;
           return (
             <Link
               key={href}
               href={href}
-              className="flex-1 flex flex-col items-center justify-center gap-1 min-h-[48px]"
+              className="flex-1 flex flex-col items-center justify-center gap-0.5 min-h-[44px]"
             >
               <Icon
-                className={`w-5 h-5 ${
+                className={`w-4 h-4 ${
                   active ? 'text-[#1A4A8A]' : 'text-gray-400'
                 }`}
                 fill={active ? '#1A4A8A' : 'none'}
                 strokeWidth={active ? 2.5 : 1.5}
               />
               <span
-                className={`text-[10px] font-medium ${
+                className={`text-[9px] font-medium ${
                   active ? 'text-[#1A4A8A]' : 'text-gray-400'
                 }`}
               >
