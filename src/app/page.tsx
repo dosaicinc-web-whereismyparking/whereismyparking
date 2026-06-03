@@ -54,36 +54,36 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-[#F7F8FA] pb-[calc(64px+env(safe-area-inset-bottom,0px))]">
+    <div className="w-full min-h-[100dvh] bg-[#F7F8FA] pb-[calc(56px+env(safe-area-inset-bottom,0px))] overflow-x-hidden">
       {/* Hero */}
-      <div className="bg-[#1A4A8A] px-5 pt-14 pb-10">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+      <div className="bg-[#1A4A8A] px-4 pt-12 pb-8">
+        <div className="flex items-center gap-2 mb-5">
+          <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
             <MapPin className="w-4 h-4 text-white" />
           </div>
-          <span className="text-white font-bold text-lg">
+          <span className="text-white font-bold text-base">
             WhereIsMyParking
           </span>
         </div>
-        <h1 className="text-white font-extrabold text-[28px] leading-tight mb-2">
+        <h1 className="text-white font-extrabold text-2xl leading-tight mb-2">
           Park anywhere.
           <br />
           Go anywhere.
         </h1>
-        <p className="text-white/60 text-sm">
+        <p className="text-white/60 text-xs">
           {city} · Kerala
         </p>
       </div>
 
       {/* Search Bar — nav trigger */}
-      <div className="px-4 -mt-5 relative z-10 mb-6">
+      <div className="mx-4 -mt-5 relative z-10 mb-5">
         <button
           suppressHydrationWarning
           onClick={() => router.push('/search')}
-          className="w-full bg-white rounded-2xl shadow-lg border border-gray-100 flex items-center gap-3 px-4 py-4 text-left active:scale-[0.98] transition-transform duration-150"
+          className="w-full bg-white rounded-xl shadow-md border border-gray-100 flex items-center gap-3 px-4 py-3.5 text-left active:scale-[0.98] transition-transform duration-150"
         >
-          <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
-          <span className="text-gray-400 text-[15px]">
+          <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <span className="text-gray-400 text-sm">
             Where do you want to park?
           </span>
         </button>
@@ -91,11 +91,11 @@ export default function Home() {
 
       {/* Listings */}
       <div className="px-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[17px] font-bold text-gray-900">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-bold text-gray-900">
             Nearby Parking
           </h2>
-          <span className="text-[13px] text-gray-500">
+          <span className="text-xs text-gray-500">
             {listings.length} spots
           </span>
         </div>
