@@ -5,6 +5,14 @@ const nextConfig: NextConfig = {
   // It generates .next/standalone — a self-contained Node.js server.
   output: 'standalone',
   allowedDevOrigins: ['100.64.183.55'],
+  images: {
+    // Serve modern formats; Next falls back automatically for older browsers.
+    formats: ['image/avif', 'image/webp'],
+    // Allow listing/owner-uploaded images served from Supabase storage.
+    remotePatterns: [
+      { protocol: 'https', hostname: '*.supabase.co' },
+    ],
+  },
   turbopack: {
     root: process.cwd()
   },

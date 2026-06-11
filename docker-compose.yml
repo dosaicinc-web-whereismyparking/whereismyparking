@@ -30,7 +30,16 @@ services:
         condition: service_healthy
     environment:
       GOTRUE_DB_DRIVER: postgres
-      GOTRUE_DB_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@supabase-db:5432/postgres?sslmode=disable
+      # search_path=auth so GoTrue's unqualified `users` query resolves to
+      # auth.users, NOT the app's public.users (which lacks an `aud` column and
+      # otherwise causes "column users.aud does not exist" at runtime).
+      GOTRUE_DB_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@supabase-db:5432/postgres?sslmode=disable&search_path=auth
+      # Pin GoTrue to the auth schema for its own tables.
+      GOTRUE_DB_NAMESPACE: auth
+      # The v2.151.0 image listens on :8081 by default; bind it to :9999 so the
+      # "9999:9999" mapping (and the app's SUPABASE_AUTH_URL) actually reach it.
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: "9999"
       GOTRUE_EXTERNAL_EMAIL_ENABLED: "false"
       GOTRUE_EXTERNAL_PHONE_ENABLED: "true"
       # Set to false in production so real SMS OTPs are sent via Fast2SMS/MSG91

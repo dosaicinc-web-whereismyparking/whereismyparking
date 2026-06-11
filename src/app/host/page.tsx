@@ -24,8 +24,8 @@ export default function HostPage() {
             Host Your Parking
           </h2>
           <p className="text-[14px] text-gray-600 mb-6">
-            Turn your unused space into a revenue stream. It only takes a few
-            minutes to get started.
+            List your parking space so nearby drivers can find and navigate to it.
+            A ₹499/month listing keeps your space visible on the map.
           </p>
           <Link
             href="/dashboard/new"
@@ -38,21 +38,21 @@ export default function HostPage() {
 
         <div className="space-y-4">
           <div className="bg-white rounded-2xl border border-gray-100 p-4">
-            <h3 className="font-bold text-gray-900 mb-1">Free to List</h3>
+            <h3 className="font-bold text-gray-900 mb-1">Simple Monthly Listing</h3>
             <p className="text-[14px] text-gray-500">
-              No upfront costs. We only take a commission when you earn.
+              ₹499/month keeps your space discoverable. No commissions, no hidden fees.
             </p>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 p-4">
-            <h3 className="font-bold text-gray-900 mb-1">Instant Bookings</h3>
+            <h3 className="font-bold text-gray-900 mb-1">Driver Navigation</h3>
             <p className="text-[14px] text-gray-500">
-              Get paid directly. Bookings are instant and secure.
+              Drivers find your space by location and navigate straight to it via Google Maps.
             </p>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 p-4">
-            <h3 className="font-bold text-gray-900 mb-1">Support Included</h3>
+            <h3 className="font-bold text-gray-900 mb-1">Admin-Verified Listings</h3>
             <p className="text-[14px] text-gray-500">
-              Our team is here to help you succeed every step of the way.
+              Every listing is reviewed before going live, so the directory stays trustworthy.
             </p>
           </div>
         </div>

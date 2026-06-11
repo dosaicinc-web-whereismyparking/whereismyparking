@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, MapPin, Building, Shield, Clock, Navigation } from 'lucide-react';
+import { formatAvailability } from '@/utils/availability';
 
 interface ListingPageProps {
   params: Promise<{
@@ -88,8 +89,8 @@ export default async function ListingPage({ params }: ListingPageProps) {
             <div className="flex items-center gap-4">
               <Clock className="w-6 h-6 text-gray-400" />
               <div>
-                <p className="text-[15px] font-medium text-gray-900">Check availability on arrival</p>
-                <p className="text-[13px] text-gray-500 mt-0.5">Status</p>
+                <p className="text-[15px] font-medium text-gray-900">{formatAvailability(listing.availableHours)}</p>
+                <p className="text-[13px] text-gray-500 mt-0.5">Availability</p>
               </div>
             </div>
           </div>
