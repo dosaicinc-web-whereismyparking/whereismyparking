@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { supabase } from '@/lib/supabase';
+import { supabase, createUserClient } from '@/lib/supabase';
 
 const listingSchema = z.object({
   name: z.string().min(3).max(100),
@@ -40,10 +40,11 @@ export async function POST(request: NextRequest) {
 
     const { name, address, type, coverage, latitude, longitude, availableHours } = result.data;
 
-    // 3. Insert using Supabase client
+    // 3. Insert as the authenticated user so RLS (auth.uid() = ownerId) passes.
+    const db = createUserClient(token);
     const id = `listing_${Math.random().toString(36).substring(2, 9)}`;
-    
-    const { error: insertError } = await supabase.from('parking_listings').insert({
+
+    const { error: insertError } = await db.from('parking_listings').insert({
       id,
       name,
       address,

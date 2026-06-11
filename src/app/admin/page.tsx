@@ -21,6 +21,7 @@ import { ListingApprovalCard, type AdminListing } from '@/components/admin/Listi
 import { OwnerSubscriptionTable } from '@/components/admin/OwnerSubscriptionTable';
 import { PublicParkingTable } from '@/components/admin/PublicParkingTable';
 import { StatsCard } from '@/components/admin/StatsCard';
+import { supabase } from '@/lib/supabase';
 
 type PendingSubscription = {
   id: string;
@@ -77,9 +78,22 @@ type Stats = {
   }>;
 };
 
-const adminHeaders = {
-  Authorization: 'Bearer test-token',
-};
+/**
+ * Build the Authorization header for admin API calls from the REAL logged-in
+ * session. Previously this was hardcoded to `Bearer test-token`, which only
+ * worked when NEXT_PUBLIC_DEV_BYPASS_AUTH was enabled — meaning the admin panel
+ * was either wide-open (bypass on in prod) or completely non-functional (bypass
+ * off → every call 401'd). The dev bypass token is retained ONLY when the bypass
+ * flag is explicitly set, so local work without a Supabase stack still functions.
+ */
+async function authHeaders(): Promise<Record<string, string>> {
+  if (process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true') {
+    return { Authorization: 'Bearer test-token' };
+  }
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -117,7 +131,7 @@ export default function AdminDashboard() {
   }, [toast]);
 
   async function fetchJson<T>(url: string): Promise<T> {
-    const response = await fetch(url, { headers: adminHeaders });
+    const response = await fetch(url, { headers: await authHeaders() });
     if (!response.ok) throw new Error(`Failed to fetch ${url}`);
     return response.json();
   }
@@ -156,7 +170,7 @@ export default function AdminDashboard() {
     const response = await fetch(`/api/admin/listings/${selectedListing.id}`, {
       method: 'PATCH',
       headers: {
-        ...adminHeaders,
+        ...(await authHeaders()),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ action: 'APPROVE' }),
@@ -180,7 +194,7 @@ export default function AdminDashboard() {
     const response = await fetch('/api/admin/subscriptions/verify', {
       method: 'POST',
       headers: {
-        ...adminHeaders,
+        ...(await authHeaders()),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ subscriptionId: selectedPayment.id, action: 'APPROVE' }),
@@ -205,7 +219,7 @@ export default function AdminDashboard() {
       await fetch(`/api/admin/listings/${rejectionTarget.id}`, {
         method: 'PATCH',
         headers: {
-          ...adminHeaders,
+          ...(await authHeaders()),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -226,7 +240,7 @@ export default function AdminDashboard() {
       await fetch('/api/admin/subscriptions/verify', {
         method: 'POST',
         headers: {
-          ...adminHeaders,
+          ...(await authHeaders()),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -257,7 +271,7 @@ export default function AdminDashboard() {
     await fetch(`/api/admin/public-parking/${id}`, {
       method: 'PATCH',
       headers: {
-        ...adminHeaders,
+        ...(await authHeaders()),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ archive: true }),
@@ -271,7 +285,7 @@ export default function AdminDashboard() {
     await fetch('/api/admin/subscriptions/verify', {
       method: 'POST',
       headers: {
-        ...adminHeaders,
+        ...(await authHeaders()),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -286,7 +300,7 @@ export default function AdminDashboard() {
   async function handleExport() {
     setSubmitting(true);
     const response = await fetch(`/api/admin/export?dataset=${exportDataset}`, {
-      headers: adminHeaders,
+      headers: await authHeaders(),
     });
     const csv = await response.text();
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });

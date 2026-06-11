@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { verifyOtpHash, hashOtp } from '@/lib/crypto';
+import { verifyOtpHash } from '@/lib/crypto';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken';
 
@@ -13,13 +13,27 @@ const LOCKOUT_MINUTES = 15;
 const MAX_ATTEMPTS = 3;
 
 /**
+ * GoTrue stores phone numbers in E.164 WITHOUT the leading "+", while the app
+ * passes them WITH the "+". A naive `u.phone === phone` therefore never matches
+ * an existing user, so login of a RETURNING user would fall through to
+ * createUser → "Phone number already registered". Compare digits-only.
+ */
+function phonesMatch(a: string | undefined, b: string | undefined): boolean {
+  const norm = (p?: string) => (p ?? '').replace(/\D/g, '');
+  return norm(a) === norm(b) && norm(a).length > 0;
+}
+
+/**
  * Manually generate a Supabase-compatible session
  */
 function generateSession(user: any) {
   const jwtSecret = process.env.SUPABASE_JWT_SECRET;
   if (!jwtSecret) throw new Error('Missing SUPABASE_JWT_SECRET');
 
-  const expires_in = 3600;
+  // 30-day sessions per product spec. The refresh token below is a placeholder
+  // (no GoTrue refresh round-trip in this custom flow), so the access token must
+  // itself carry the full intended lifetime rather than a 1-hour window.
+  const expires_in = 30 * 24 * 60 * 60;
   const expires_at = Math.floor(Date.now() / 1000) + expires_in;
 
   const payload = {
@@ -60,7 +74,7 @@ export async function POST(request: NextRequest) {
 
       // Get or create user
       const { data: userLookup } = await supabaseAdmin.auth.admin.listUsers();
-      let user = userLookup.users.find(u => u.phone === phone);
+      let user = userLookup.users.find(u => phonesMatch(u.phone, phone));
       
       if (!user) {
         const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
@@ -135,16 +149,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Verify OTP
-    console.log('[DEV VERIFY CHECK] Input OTP:', otp);
-    console.log('[DEV VERIFY CHECK] Stored Hash:', session.otp_hash);
-    console.log('[DEV VERIFY CHECK] Match:', verifyOtpHash(otp, session.otp_hash));
-    
     const isValid = verifyOtpHash(otp, session.otp_hash);
-    
+
     if (!isValid) {
-      console.log('[Auth Verify] Stored Hash:', session.otp_hash);
-      console.log('[Auth Verify] Calculated Hash:', hashOtp(otp));
-      
       const newAttempts = (session.attempts || 0) + 1;
       const isLocking = newAttempts >= MAX_ATTEMPTS;
       const locked_until = isLocking 
@@ -182,7 +189,7 @@ export async function POST(request: NextRequest) {
 
     // Get or Create User
     const { data: userLookup } = await supabaseAdmin.auth.admin.listUsers();
-    let user = userLookup.users.find(u => u.phone === phone);
+    let user = userLookup.users.find(u => phonesMatch(u.phone, phone));
 
     if (!user) {
       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({

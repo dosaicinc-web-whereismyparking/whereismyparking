@@ -1,8 +1,9 @@
 import React from 'react';
 import { ParkingListing } from '@/lib/supabase-types';
-import { Clock, Navigation, MapPin } from 'lucide-react';
+import { Clock, MapPin } from 'lucide-react';
 
 import { NavigateButton } from './NavigateButton';
+import { formatAvailability } from '@/utils/availability';
 
 
 interface ParkingCardProps {
@@ -55,6 +56,11 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({
            <span>{parking.type}</span>
            <span className="text-gray-300">•</span>
            <span>{parking.coverage}</span>
+        </div>
+
+        <div className="flex items-center gap-1.5 text-xs text-text-secondary pt-1">
+          <Clock className="w-3 h-3 shrink-0" />
+          <span>{formatAvailability(parking.availableHours)}</span>
         </div>
 
         <div className="pt-3 flex gap-2 overflow-hidden">

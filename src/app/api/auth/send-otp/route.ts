@@ -37,16 +37,30 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 2. Cooldown Check (Plan 06-03 - basic implementation for now)
+    // 2. Cooldown + lockout check.
+    // We read the existing session BEFORE it is replaced below so that an active
+    // lockout (and the failed-attempt counter) survives a re-send — otherwise a
+    // locked-out attacker could simply request a fresh OTP to reset `attempts`
+    // and defeat the 3-attempt / 15-minute brute-force protection.
     const { data: latestSession } = await supabaseAdmin
       .from('otp_sessions')
-      .select('last_sent_at')
+      .select('last_sent_at, attempts, locked_until')
       .eq('phone', phone)
       .order('last_sent_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    if (latestSession) {
+    if (latestSession?.locked_until && new Date(latestSession.locked_until) > new Date()) {
+      const remaining = Math.ceil(
+        (new Date(latestSession.locked_until).getTime() - Date.now()) / (60 * 1000)
+      );
+      return NextResponse.json(
+        { error: `Account locked due to too many failed attempts. Try again in ${remaining} minutes.` },
+        { status: 429 }
+      );
+    }
+
+    if (latestSession?.last_sent_at) {
       const elapsed = Date.now() - new Date(latestSession.last_sent_at).getTime();
       const cooldown = 60 * 1000;
       if (elapsed < cooldown) {
@@ -57,6 +71,14 @@ export async function POST(request: NextRequest) {
         );
       }
     }
+
+    // Preserve the failed-attempt counter across re-sends so the lockout budget
+    // is per-phone-per-window, not per-OTP. Once a lockout has fully elapsed,
+    // reset to a fresh budget so a legitimate user isn't re-locked on one typo.
+    const lockoutElapsed = Boolean(
+      latestSession?.locked_until && new Date(latestSession.locked_until) <= new Date()
+    );
+    const carriedAttempts = lockoutElapsed ? 0 : latestSession?.attempts ?? 0;
 
     // 3. Generate and Send OTP
     const otp = generateOtp();
@@ -70,8 +92,6 @@ export async function POST(request: NextRequest) {
     }
 
     const otp_hash = hashOtp(otp);
-    console.log('[DEV HASH CHECK] OTP:', otp);
-    console.log('[DEV HASH CHECK] Hash:', otp_hash);
     const expires_at = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000).toISOString();
 
     // 4. Store Session via PostgREST
@@ -105,7 +125,7 @@ export async function POST(request: NextRequest) {
           otp_hash,
           expires_at,
           last_sent_at: new Date().toISOString(),
-          attempts: 0,
+          attempts: carriedAttempts,
           ...(process.env.NODE_ENV === 'development' && { plain_otp: otp })
         })
       });

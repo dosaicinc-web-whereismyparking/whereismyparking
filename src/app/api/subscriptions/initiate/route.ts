@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { supabase } from '@/lib/supabase';
+import { supabase, createUserClient } from '@/lib/supabase';
 
 const initiateSchema = z.object({
   listingId: z.string(),
@@ -23,8 +23,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { listingId } = initiateSchema.parse(body);
 
+    const db = createUserClient(token);
+
     // 1. Verify listing ownership
-    const { data: listing, error: listingError } = await supabase
+    const { data: listing, error: listingError } = await db
       .from('parking_listings')
       .select('ownerId')
       .eq('id', listingId)
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     // 2. Create or Update subscription record
     // Status starts at PENDING_PAYMENT
-    const { data: subscription, error: subError } = await supabase
+    const { data: subscription, error: subError } = await db
       .from('subscriptions')
       .upsert({
         listingId,

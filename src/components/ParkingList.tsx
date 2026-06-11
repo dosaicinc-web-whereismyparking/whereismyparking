@@ -44,7 +44,7 @@ export const ParkingList: React.FC<ParkingListProps> = ({
                 value={filters.type}
                 onChange={(e) => onFilterChange({ ...filters, type: e.target.value as any })}
               >
-                <option value="ALL">All types</option>
+                <option value="ALL">All Types</option>
                 <option value="PUBLIC">Public</option>
                 <option value="PRIVATE">Private</option>
               </select>
@@ -59,7 +59,7 @@ export const ParkingList: React.FC<ParkingListProps> = ({
                 value={filters.coverage}
                 onChange={(e) => onFilterChange({ ...filters, coverage: e.target.value as any })}
               >
-                <option value="ALL">All coverage</option>
+                <option value="ALL">All Coverage</option>
                 <option value="OPEN">Open space</option>
                 <option value="COVERED">Covered</option>
                 <option value="MULTI">Multi-level</option>
@@ -78,7 +78,7 @@ export const ParkingList: React.FC<ParkingListProps> = ({
             <div className="bg-gray-50 p-6 rounded-full mb-4">
               <SearchX className="w-10 h-10 text-gray-300" />
             </div>
-            <p className="text-text-main font-bold text-lg">No results found</p>
+            <p className="text-text-main font-bold text-lg">No parking spots found</p>
             <p className="text-text-secondary text-sm mt-1">Try adjusting your filters or area.</p>
           </div>
         ) : (

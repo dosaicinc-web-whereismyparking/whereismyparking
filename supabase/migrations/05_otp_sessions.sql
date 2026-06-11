@@ -8,9 +8,15 @@ CREATE TABLE "otp_sessions" (
     "locked_until" TIMESTAMP(3) WITH TIME ZONE,
     "created_at" TIMESTAMP(3) WITH TIME ZONE NOT NULL DEFAULT now(),
     "last_sent_at" TIMESTAMP(3) WITH TIME ZONE NOT NULL DEFAULT now(),
+    -- Dev-only: send-otp stores the plaintext OTP here when NODE_ENV=development
+    -- so /api/dev/get-otp can surface it for local testing. Never written in prod.
+    "plain_otp" TEXT,
 
     CONSTRAINT "otp_sessions_pkey" PRIMARY KEY ("id")
 );
+
+-- Idempotent guard for databases created before plain_otp was added.
+ALTER TABLE "otp_sessions" ADD COLUMN IF NOT EXISTS "plain_otp" TEXT;
 
 -- CreateIndex
 CREATE INDEX "otp_sessions_phone_idx" ON "otp_sessions"("phone");
