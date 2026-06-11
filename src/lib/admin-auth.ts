@@ -79,6 +79,17 @@ export async function requireAdminSession(request: NextRequest): Promise<AdminSe
   };
 }
 
+/**
+ * Strip characters that are significant in PostgREST filter / `.or()` grammar so
+ * a search term cannot inject extra conditions (e.g. `x,status.eq.ACTIVE`).
+ * Removes commas, parentheses, dots, colons, asterisks and quotes.
+ */
+export function sanitizeSearchTerm(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+  const cleaned = value.replace(/[,()*:."'\\]/g, '').trim();
+  return cleaned.length > 0 ? cleaned : undefined;
+}
+
 export function parseAdminFilters(url: string) {
   const { searchParams } = new URL(url);
   const parsed = adminStatusSchema.parse({
@@ -88,7 +99,7 @@ export function parseAdminFilters(url: string) {
     dateTo: searchParams.get('dateTo') ?? undefined,
   });
 
-  return parsed;
+  return { ...parsed, search: sanitizeSearchTerm(parsed.search) };
 }
 
 export async function logAdminActivity(input: {

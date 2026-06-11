@@ -209,11 +209,11 @@ describe('Parking Discovery (Phase 1)', () => {
     it('PH5-BUG-01: Step 1 cannot progress if name or address are empty', async () => {
       render(<ListingForm />);
       
-      const continueBtn = screen.getByRole('button', { name: /continue to map/i });
+      const continueBtn = screen.getByRole('button', { name: /continue/i });
       fireEvent.click(continueBtn);
 
-      // Should still be on Step 1 (Basic Information header should be visible)
-      expect(screen.getByText('Basic Information')).toBeInTheDocument();
+      // Should still be on Step 1 (Property Details header should be visible)
+      expect(screen.getByText('Property Details')).toBeInTheDocument();
       // Error messages should appear
       await waitFor(() => {
         expect(screen.getByText(/name must be at least 3 characters/i)).toBeInTheDocument();
@@ -230,14 +230,14 @@ describe('Parking Discovery (Phase 1)', () => {
       fireEvent.change(nameInput, { target: { value: 'My Parking Spot' } });
       fireEvent.change(addressInput, { target: { value: '123 Main St, Kochi' } });
       
-      const continueBtn = screen.getByRole('button', { name: /continue to map/i });
+      const continueBtn = screen.getByRole('button', { name: /continue/i });
       fireEvent.click(continueBtn);
 
-      // Should progress to Step 2 (Set Location header should be visible)
+      // Should progress to Step 2 (Set precise location header should be visible)
       await waitFor(() => {
-        expect(screen.getByText('Set Location')).toBeInTheDocument();
+        expect(screen.getByText('Set precise location')).toBeInTheDocument();
       });
-      expect(screen.queryByText('Basic Information')).not.toBeInTheDocument();
+      expect(screen.queryByText('Property Details')).not.toBeInTheDocument();
     });
   });
 });

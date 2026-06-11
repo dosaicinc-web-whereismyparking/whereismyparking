@@ -1,5 +1,6 @@
 'use client';
 import { Navigation, Clock } from 'lucide-react';
+import { formatAvailability } from '@/utils/availability';
 
 interface ParkingListing {
   id: string;
@@ -11,6 +12,7 @@ interface ParkingListing {
   distance_km?: number;
   type?: string;
   coverage?: string;
+  availableHours?: unknown;
 }
 
 export default function ParkingCardNew({
@@ -74,7 +76,7 @@ export default function ParkingCardNew({
           )}
           <span className="text-[10px] text-amber-600 font-medium flex items-center gap-0.5 ml-auto">
             <Clock className="w-2.5 h-2.5 flex-shrink-0" />
-            Check on arrival
+            {formatAvailability(listing.availableHours)}
           </span>
         </div>
 

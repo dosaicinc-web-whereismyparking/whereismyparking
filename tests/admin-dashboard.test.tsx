@@ -1,5 +1,19 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+// Admin API calls now derive their Authorization header from the real session
+// (the hardcoded `Bearer test-token` was removed). Mock the session so the
+// dashboard's authHeaders() resolves without a live Supabase stack.
+vi.mock('@/lib/supabase', () => ({
+  supabase: {
+    auth: {
+      getSession: vi.fn(() =>
+        Promise.resolve({ data: { session: { access_token: 'session-token' } }, error: null })
+      ),
+    },
+  },
+}));
+
 import AdminDashboard from '@/app/admin/page';
 
 const makeJsonResponse = (data: unknown) =>
@@ -144,7 +158,7 @@ describe('Phase 3 admin dashboard', () => {
   it('renders the action-center overview with KPI cards and priority queues', async () => {
     render(<AdminDashboard />);
 
-    expect(await screen.findByText(/Admin action center/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Admin Control Center/i)).toBeInTheDocument();
     expect(await screen.findByText('Pending approvals')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /listing review/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /payment verification/i })).toBeInTheDocument();

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { supabase } from '@/lib/supabase';
+import { supabase, createUserClient } from '@/lib/supabase';
 
 const utrSchema = z.object({
   subscriptionId: z.string(),
@@ -24,8 +24,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { subscriptionId, utr } = utrSchema.parse(body);
 
+    const db = createUserClient(token);
+
     // 1. Verify subscription ownership
-    const { data: subscription, error: subError } = await supabase
+    const { data: subscription, error: subError } = await db
       .from('subscriptions')
       .select('ownerId')
       .eq('id', subscriptionId)
@@ -41,7 +43,7 @@ export async function POST(request: NextRequest) {
 
     // 2. Update subscription to pending verification
     // Supabase will handle the unique constraint on UTR
-    const { error: updateError } = await supabase
+    const { error: updateError } = await db
       .from('subscriptions')
       .update({
         utr,

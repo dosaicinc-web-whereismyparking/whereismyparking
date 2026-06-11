@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase, createUserClient } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,9 +15,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch listings for the authenticated owner
+    // Fetch listings for the authenticated owner (RLS-scoped to auth.uid()).
     // Include the subscription status using Supabase join
-    const { data: listings, error: dbError } = await supabase
+    const db = createUserClient(token);
+    const { data: listings, error: dbError } = await db
       .from('parking_listings')
       .select('*, subscription:subscriptions(status, utr, endDate)')
       .eq('ownerId', user.id)
