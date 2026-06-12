@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const CF_TOKEN = '***REMOVED-CF-TOKEN***';
+const CF_TOKEN = process.env.CF_API_TOKEN;
 const ZONE_ID = 'bc5bb34362fc41afd02c80de73001192';
 const LB_IP = '91.98.222.135';
 const DOMAIN = 'whereismyparking.com';

@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 
 const URL = 'http://127.0.0.1:54321/otp_sessions';
-const SERVICE_KEY = '***REMOVED-JWT***';
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 async function testUpsert() {
   try {

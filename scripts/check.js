@@ -2,7 +2,7 @@ const { Client } = require('pg');
 
 async function check() {
   const client = new Client({
-    connectionString: 'postgresql://postgres:***REMOVED-DBPW***@10.0.0.2:5432/postgres?sslmode=disable'
+    connectionString: process.env.DATABASE_URL
   });
   
   await client.connect();

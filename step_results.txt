@@ -77,7 +77,7 @@ Note: Unnecessary use of -X or --request, POST is already inferred.
 > Host: 127.0.0.1:9999
 > User-Agent: curl/8.7.1
 > Accept: */*
-> Authorization: Bearer ***REMOVED-JWT***
+> Authorization: Bearer <REDACTED-JWT>
 > Content-Type: application/json
 > Content-Length: 49
 > 
@@ -118,5 +118,5 @@ Note: Unnecessary use of -X or --request, POST is already inferred.
 
 === STEP 6: .env.local on Mac ===
 NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
-SUPABASE_SERVICE_ROLE_KEY=***REMOVED-JWT***
+SUPABASE_SERVICE_ROLE_KEY=<REDACTED-JWT>
 SUPABASE_AUTH_URL=http://127.0.0.1:9999

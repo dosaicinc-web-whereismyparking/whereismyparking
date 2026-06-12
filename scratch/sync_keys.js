@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 
-const secret = '***REMOVED-JWT-SECRET***';
+const secret = process.env.SUPABASE_JWT_SECRET;
 
 function createJWT(payload, secret) {
   const header = { alg: 'HS256', typ: 'JWT' };

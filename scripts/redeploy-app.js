@@ -84,9 +84,9 @@ async function redeployNode(node) {
     }
   }
 
-  // Rebuild Docker image with build args
+  // Rebuild Docker image with build args (--no-cache forces clean rebuild)
   console.log('Building Docker image (may take 1-2 min)...');
-  const buildCmd = `cd ~/app && docker build${buildArgs} -t whereismyparking:latest . 2>&1`;
+  const buildCmd = `cd ~/app && docker build --no-cache${buildArgs} -t whereismyparking:latest . 2>&1`;
   const buildOutput = runSsh(node.ip, buildCmd);
   const lastLines = buildOutput.split('\n').slice(-10).join('\n');
   console.log(lastLines);
@@ -115,7 +115,7 @@ async function redeployNode(node) {
 
 async function purgeCloudflareCache() {
   // Read CF credentials from setup-cloudflare.js constants (source of truth)
-  const CF_TOKEN = '***REMOVED-CF-TOKEN***';
+  const CF_TOKEN = process.env.CF_API_TOKEN;
   const ZONE_ID  = 'bc5bb34362fc41afd02c80de73001192';
 
   console.log('\n🌐 Purging Cloudflare cache...');

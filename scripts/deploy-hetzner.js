@@ -7,11 +7,11 @@ const DEPLOY_CONFIG = {
   dbPrimaryIp: '49.12.37.22',
   supabaseNodeIp: '178.104.191.198',
   appNodes: ['178.105.209.94', '178.105.223.164'],
-  postgresPassword: '***REMOVED-DBPW***',
-  jwtSecret: '***REMOVED-JWT-SECRET***',
-  anonKey: '***REMOVED-JWT***',
-  serviceKey: '***REMOVED-JWT***',
-  authSalt: '***REMOVED-SALT***',
+  postgresPassword: process.env.POSTGRES_PASSWORD,
+  jwtSecret: process.env.SUPABASE_JWT_SECRET,
+  anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  authSalt: process.env.AUTH_SALT,
   adminWhitelistedMobiles: '+919446976393',
   loadBalancerIp: '91.98.222.135'
 };

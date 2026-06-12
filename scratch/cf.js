@@ -1,4 +1,4 @@
-const token = '***REMOVED-CF-TOKEN***';
+const token = process.env.CF_API_TOKEN;
 async function run() {
   const res = await fetch('https://api.cloudflare.com/client/v4/zones', {
     headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
