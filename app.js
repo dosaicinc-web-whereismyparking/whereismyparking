@@ -1,11 +1,12 @@
 /**
  * WIMP — WhereIsMyParking
- * app.js | v3.1 — Session Freshness & UX Flow
+ * app.js | v3.2 — Master UI/UX Production Refactor
  *
  * Data layer & analytics are 100% preserved:
  *   - Static dataset: /data/kerala-parking.json (HTTP cache intact)
- *   - PMF Analytics: track() calls and localStorage history intact
- *   - Fresh session: UI resets to Splash -> Landing on load/reload/BFCache
+ *   - PMF Analytics: track('session_start'), track('location_granted'), etc.
+ *   - Address data: sourced 100% from static dataset (no live geocoding per card)
+ *   - Navigation: In-memory history stack with explicit [← Back] and [🏠 Home]
  */
 
 'use strict';
@@ -21,7 +22,7 @@ const CONFIG = {
   nominatimUrl:     'https://nominatim.openstreetmap.org/search',
   nominatimTimeout: 8000,    // ms — abort manual geocoding if no response in 8s
   geoTimeout:       8000,    // ms — geolocation watchdog
-  splashMaxMs:      2000,    // ms — max splash duration before showing landing
+  splashMaxMs:      1800,    // ms — max splash duration before showing landing
   analyticsUrl:     null,    // Set to Cloudflare Worker URL when available
   analyticsKey:     'wimp_analytics_events',
   analyticsMax:     500,
@@ -35,11 +36,13 @@ let state = {
   lng:           null,
   radius:        CONFIG.radiusDefault,
   lots:          [],
+  selectedLot:   null,
   allLots:       null,  // full Kerala dataset, cached after first fetch
   dataError:     false,
   splashDone:    false,
   loadingTimer:  null,
   loadingMsgIdx: 0,
+  historyStack:  ['landingScreen'], // in-memory screen history router
 };
 
 /* ─────────────────────────────────────────
@@ -50,7 +53,7 @@ const el = {
   statusDot:            $('status-dot'),
   statusText:           $('status-text'),
 
-  // Screens
+  // Screens & Modals
   splashScreen:         $('splash-screen'),
   landingScreen:        $('landing-screen'),
   skeletonState:        $('skeleton-state'),
@@ -58,6 +61,7 @@ const el = {
   fallbackPanel:        $('fallback-panel'),
   emptyState:           $('empty-state'),
   errorState:           $('error-state'),
+  detailsModal:         $('details-modal'),
 
   // Buttons & Controls
   btnGrantLocation:     $('btn-grant-location'),
@@ -74,25 +78,74 @@ const el = {
   errorDetail:          $('error-detail'),
   btnRetryError:        $('btn-retry-error'),
   btnHomeError:         $('btn-home-error'),
-  btnBackHomeResults:   $('btn-back-home-results'),
-  btnBackHomeFallback:  $('btn-back-home-fallback'),
+
+  // Navigation Bar Buttons
+  btnBackResults:       $('btn-back-results'),
+  btnHomeResults:       $('btn-home-results'),
+  btnBackFallback:      $('btn-back-fallback'),
+  btnHomeFallback:      $('btn-home-fallback'),
+  btnBackEmpty:         $('btn-back-empty'),
+  btnHomeEmptyNav:      $('btn-home-empty-nav'),
+  btnBackError:         $('btn-back-error'),
+  btnHomeErrorNav:      $('btn-home-error-nav'),
+  btnModalBack:         $('btn-modal-back'),
+  btnModalHome:         $('btn-modal-home'),
+  btnModalNavigate:     $('btn-modal-navigate'),
+
+  // Modal Fields
+  modalRank:            $('modal-rank'),
+  modalAccess:          $('modal-access'),
+  modalSpotName:        $('modal-spot-name'),
+  modalDist:            $('modal-dist'),
+  modalAddress:         $('modal-address'),
+  modalCoords:          $('modal-coords'),
+  modalTags:            $('modal-tags'),
+
   fabTop:               $('fab-top'),
 };
 
 /* ─────────────────────────────────────────
-   UI STATE MACHINE
+   UI STATE MACHINE & ROUTER
 ───────────────────────────────────────── */
 const ALL_STATES = [
   'splashScreen', 'landingScreen', 'skeletonState',
   'resultsSection', 'fallbackPanel', 'emptyState', 'errorState',
 ];
 
-function showState(...names) {
+function showState(name) {
   stopLoadingRotator();
   ALL_STATES.forEach(s => {
     const elem = el[s];
-    if (elem) elem.classList.toggle('hidden', !names.includes(s));
+    if (elem) elem.classList.toggle('hidden', s !== name);
   });
+  if (name !== 'detailsModal' && el.detailsModal) {
+    el.detailsModal.classList.add('hidden');
+  }
+}
+
+function pushState(screenName) {
+  if (state.historyStack[state.historyStack.length - 1] !== screenName) {
+    state.historyStack.push(screenName);
+  }
+  showState(screenName);
+}
+
+function popState() {
+  if (state.historyStack.length > 1) {
+    state.historyStack.pop();
+    const prev = state.historyStack[state.historyStack.length - 1];
+    showState(prev);
+  } else {
+    goHome();
+  }
+}
+
+function goHome() {
+  stopLoadingRotator();
+  if (el.detailsModal) el.detailsModal.classList.add('hidden');
+  state.historyStack = ['landingScreen'];
+  showState('landingScreen');
+  setStatus('Ready — choose an option below', 'idle');
 }
 
 function setStatus(msg, mode = 'idle') {
@@ -177,7 +230,7 @@ async function ensureDataLoaded() {
 ───────────────────────────────────────── */
 function requestLocation() {
   track('session_start');
-  showState('skeletonState');
+  pushState('skeletonState');
   startLoadingRotator();
 
   if (!navigator.geolocation) {
@@ -261,7 +314,7 @@ function formatDist(m) {
    NOMINATIM GEOCODING FALLBACK (8s TIMEOUT)
 ───────────────────────────────────────── */
 async function geocodeFallback(query) {
-  showState('skeletonState');
+  pushState('skeletonState');
   startLoadingRotator();
   el.geocodeError.classList.add('hidden');
 
@@ -294,7 +347,7 @@ async function geocodeFallback(query) {
     state.lat = parseFloat(results[0].lat);
     state.lng = parseFloat(results[0].lon);
 
-    showState('skeletonState');
+    pushState('skeletonState');
     startLoadingRotator();
 
     const ok = await ensureDataLoaded();
@@ -331,6 +384,36 @@ function openNavigation(lat, lng, name) {
 }
 
 /* ─────────────────────────────────────────
+   DETAILS MODAL SHEET
+───────────────────────────────────────── */
+function openDetailsModal(lot, rankIndex) {
+  state.selectedLot = lot;
+  const { value, unit } = formatDist(lot.dist);
+  const access = lot.accessType || 'Unspecified';
+
+  el.modalRank.textContent = `#${rankIndex + 1} Nearest`;
+  el.modalAccess.textContent = access;
+  el.modalAccess.className = `badge-access ${access.toLowerCase()}`;
+  el.modalSpotName.textContent = lot.name || lot.label || 'Parking Area';
+  el.modalDist.textContent = `${value} ${unit} away`;
+  el.modalAddress.textContent = lot.address || 'Unspecified location';
+  el.modalCoords.textContent = `${lot.lat}, ${lot.lng}`;
+
+  if (lot.type && lot.type.length) {
+    el.modalTags.innerHTML = lot.type.map(t => `<span class="meta-tag">${escHtml(t)}</span>`).join('');
+  } else {
+    el.modalTags.innerHTML = `<span class="meta-tag">Standard Parking</span>`;
+  }
+
+  el.detailsModal.classList.remove('hidden');
+}
+
+function closeDetailsModal() {
+  if (el.detailsModal) el.detailsModal.classList.add('hidden');
+  state.selectedLot = null;
+}
+
+/* ─────────────────────────────────────────
    RENDERING
 ───────────────────────────────────────── */
 function renderResults(lots, radius) {
@@ -348,7 +431,7 @@ function renderResults(lots, radius) {
 
     const li = document.createElement('li');
     li.innerHTML = `
-      <article class="result-card" style="animation-delay:${i*50}ms" data-id="${lot.id}">
+      <article class="result-card" style="animation-delay:${i*40}ms" data-index="${i}">
         <div class="card-top">
           <div class="card-title-group">
             <div class="card-badges">
@@ -357,6 +440,7 @@ function renderResults(lots, radius) {
             </div>
             <h3 class="card-name">${escHtml(lot.name || lot.label || 'Parking Area')}</h3>
             <p class="card-address-text">📍 ${escHtml(addressStr)}</p>
+            <span class="card-inspect-hint">Tap for details →</span>
           </div>
           <div class="card-distance" aria-label="${value} ${unit} away">
             ${value}<span>${unit}</span>
@@ -386,7 +470,7 @@ function renderResults(lots, radius) {
     el.resultsList.appendChild(li);
   });
 
-  showState('resultsSection');
+  pushState('resultsSection');
   el.fabTop.classList.toggle('visible', lots.length > 5);
 }
 
@@ -397,29 +481,23 @@ function renderEmpty() {
   el.emptySubText.textContent = state.radius >= CONFIG.radiusExpanded
     ? `No parking found within ${CONFIG.radiusExpanded/1000} km. OSM data may be sparse here — try a different area.`
     : `No parking found within ${CONFIG.radiusDefault/1000} km.`;
-  showState('emptyState');
+  pushState('emptyState');
 }
 
 function renderError(detail) {
   stopLoadingRotator();
   setStatus('Failed to load', 'error');
   el.errorDetail.textContent = detail || 'Something went wrong. Try again.';
-  showState('errorState');
+  pushState('errorState');
 }
 
 function showFallback(note) {
   stopLoadingRotator();
-  showState('fallbackPanel');
+  pushState('fallbackPanel');
   el.geocodeError.classList.toggle('hidden', !note);
   if (note) el.geocodeError.textContent = note;
   setStatus('Enter your location manually', 'idle');
   setTimeout(() => el.fallbackInput?.focus(), 100);
-}
-
-function showLanding() {
-  stopLoadingRotator();
-  showState('landingScreen');
-  setStatus('Ready — choose an option below', 'idle');
 }
 
 /* ─────────────────────────────────────────
@@ -438,12 +516,31 @@ function escAttr(str) {
    EVENT LISTENERS
 ───────────────────────────────────────── */
 function bindEvents() {
-  // Navigation button click on card face
+  // Card click router: Direct Navigate button vs Card Body Details Modal
   el.resultsList.addEventListener('click', e => {
-    const btn = e.target.closest('.btn-navigate');
-    if (!btn) return;
-    const { lat, lng, name } = btn.dataset;
-    openNavigation(parseFloat(lat), parseFloat(lng), name);
+    const navBtn = e.target.closest('.btn-navigate');
+    if (navBtn) {
+      e.stopPropagation();
+      const { lat, lng, name } = navBtn.dataset;
+      openNavigation(parseFloat(lat), parseFloat(lng), name);
+      return;
+    }
+
+    const card = e.target.closest('.result-card');
+    if (card) {
+      const idx = parseInt(card.dataset.index, 10);
+      const lot = state.lots[idx];
+      if (lot) openDetailsModal(lot, idx);
+    }
+  });
+
+  // Modal navigation & action
+  el.btnModalBack?.addEventListener('click', closeDetailsModal);
+  el.btnModalHome?.addEventListener('click', goHome);
+  el.btnModalNavigate?.addEventListener('click', () => {
+    if (state.selectedLot) {
+      openNavigation(state.selectedLot.lat, state.selectedLot.lng, state.selectedLot.name || state.selectedLot.label || 'Parking Area');
+    }
   });
 
   // Landing actions
@@ -462,22 +559,31 @@ function bindEvents() {
     }
   });
 
-  // Back to Home affordances (State machine, no page reloads)
-  el.btnBackHomeResults?.addEventListener('click', showLanding);
-  el.btnBackHomeFallback?.addEventListener('click', showLanding);
-  el.btnHomeEmpty?.addEventListener('click', showLanding);
-  el.btnHomeError?.addEventListener('click', showLanding);
+  // Top Nav Bar Back & Home Buttons (In-memory Router)
+  el.btnBackResults?.addEventListener('click', popState);
+  el.btnHomeResults?.addEventListener('click', goHome);
+
+  el.btnBackFallback?.addEventListener('click', popState);
+  el.btnHomeFallback?.addEventListener('click', goHome);
+
+  el.btnBackEmpty?.addEventListener('click', popState);
+  el.btnHomeEmptyNav?.addEventListener('click', goHome);
+  el.btnHomeEmpty?.addEventListener('click', goHome);
+
+  el.btnBackError?.addEventListener('click', popState);
+  el.btnHomeErrorNav?.addEventListener('click', goHome);
+  el.btnHomeError?.addEventListener('click', goHome);
 
   // Recovery actions
   el.btnRetryEmpty?.addEventListener('click', () => showFallback());
   el.btnRetryError?.addEventListener('click', () => {
     state.dataError = false;
     if (state.lat && state.lng) {
-      showState('skeletonState');
+      pushState('skeletonState');
       startLoadingRotator();
       ensureDataLoaded().then(ok => ok && findNearbyParking(state.lat, state.lng, CONFIG.radiusDefault));
     } else {
-      showLanding();
+      goHome();
     }
   });
 
@@ -504,7 +610,11 @@ function init() {
   state.lat = null;
   state.lng = null;
   state.lots = [];
+  state.selectedLot = null;
   state.splashDone = false;
+  state.historyStack = ['landingScreen'];
+
+  if (el.detailsModal) el.detailsModal.classList.add('hidden');
 
   // Show splash screen on fresh boot
   showState('splashScreen');
@@ -516,7 +626,8 @@ function init() {
   // Transition out of splash screen after max duration
   setTimeout(() => {
     state.splashDone = true;
-    showLanding();
+    showState('landingScreen');
+    setStatus('Ready — choose an option below', 'idle');
   }, CONFIG.splashMaxMs);
 }
 

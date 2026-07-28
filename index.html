@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0a0f1e" />
+  <meta name="theme-color" content="#070b16" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="WIMP" />
@@ -46,34 +46,37 @@
   <main id="main">
 
     <!-- STATE 1: Splash / Boot screen -->
-    <section id="splash-screen" class="splash-container" aria-labelledby="splash-title">
-      <div class="splash-icon" aria-hidden="true">P</div>
+    <section id="splash-screen" class="splash-container page-fade-in" aria-labelledby="splash-title">
+      <div class="splash-icon-wrap">
+        <div class="splash-icon" aria-hidden="true">P</div>
+      </div>
       <h1 class="splash-title" id="splash-title">WhereIsMyParking</h1>
-      <p class="splash-sub">Kerala Parking Discovery</p>
+      <p class="splash-sub">Instant Parking Discovery in Kerala</p>
       <div class="splash-loader" aria-hidden="true">
         <div class="spinner"></div>
       </div>
     </section>
 
     <!-- STATE 2: Landing screen -->
-    <section id="landing-screen" class="landing-container hidden" aria-labelledby="landing-title">
+    <section id="landing-screen" class="landing-container hidden page-fade-in" aria-labelledby="landing-title">
       <div class="landing-hero-icon" aria-hidden="true">🅿️</div>
       <h1 class="landing-title" id="landing-title">Find parking<br>near you</h1>
-      <p class="landing-sub">Discover closest parking spots in Kerala in seconds. No friction, zero waiting.</p>
+      <p class="landing-sub">Discover available parking spots in Kerala in seconds. Fast, zero registration.</p>
       
       <div class="landing-actions">
         <button class="btn-primary" id="btn-grant-location" type="button">
           <svg class="btn-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
-          📍 Use My Current Location
+          📍 Use Current Location
         </button>
         <button class="btn-secondary" id="btn-enter-manually" type="button">
-          ⌨️ Enter Location Manually
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="8"/><line x1="10" y1="8" x2="10" y2="8"/><line x1="14" y1="8" x2="14" y2="8"/><line x1="18" y1="8" x2="18" y2="8"/><line x1="6" y1="12" x2="6" y2="12"/><line x1="10" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="14" y2="12"/><line x1="18" y1="12" x2="18" y2="12"/><line x1="8" y1="16" x2="16" y2="16"/></svg>
+          ⌨️ Search Location Manually
         </button>
       </div>
     </section>
 
     <!-- STATE 3: Skeleton loading -->
-    <div id="skeleton-state" class="skeleton-list hidden" aria-label="Loading parking results" role="status">
+    <div id="skeleton-state" class="skeleton-list hidden page-fade-in" aria-label="Loading parking results" role="status">
       <div class="skeleton-card">
         <div class="sk-line w40"></div>
         <div class="sk-line w80"></div>
@@ -94,13 +97,16 @@
       </div>
     </div>
 
-    <!-- STATE 4: Results -->
-    <section id="results-section" class="hidden" aria-labelledby="results-heading">
-      <div class="nav-bar-top">
-        <button class="btn-back-home" id="btn-back-home-results" type="button">
-          ← Back to Home
+    <!-- STATE 4: Results List -->
+    <section id="results-section" class="hidden page-fade-in" aria-labelledby="results-heading">
+      <nav class="app-top-nav" aria-label="Results navigation">
+        <button class="btn-nav-back" id="btn-back-results" type="button" aria-label="Go back">
+          ← Back
         </button>
-      </div>
+        <button class="btn-nav-home" id="btn-home-results" type="button" aria-label="Go to Home">
+          🏠 Home
+        </button>
+      </nav>
       <h2 class="sr-only" id="results-heading">Nearby parking spots</h2>
       <div id="results-header">
         <span class="results-count" id="results-count-label"></span>
@@ -109,13 +115,16 @@
       <ol id="results-list" aria-label="Parking locations sorted by distance"></ol>
     </section>
 
-    <!-- STATE 5: Fallback manual input -->
-    <section id="fallback-panel" class="hidden" aria-labelledby="fallback-label">
-      <div class="nav-bar-top">
-        <button class="btn-back-home" id="btn-back-home-fallback" type="button">
-          ← Back to Home
+    <!-- STATE 5: Fallback Manual Search -->
+    <section id="fallback-panel" class="hidden page-fade-in" aria-labelledby="fallback-label">
+      <nav class="app-top-nav" aria-label="Search navigation">
+        <button class="btn-nav-back" id="btn-back-fallback" type="button" aria-label="Go back">
+          ← Back
         </button>
-      </div>
+        <button class="btn-nav-home" id="btn-home-fallback" type="button" aria-label="Go to Home">
+          🏠 Home
+        </button>
+      </nav>
       <p class="fallback-label" id="fallback-label">Enter a locality or landmark in Kerala</p>
       <div class="fallback-row">
         <input
@@ -134,30 +143,87 @@
       <div id="geocode-error" class="error-sub hidden"></div>
     </section>
 
-    <!-- STATE 6: Empty — no results found -->
-    <section id="empty-state" class="hidden" aria-live="polite" aria-labelledby="empty-title-text">
+    <!-- STATE 6: Empty — No results found -->
+    <section id="empty-state" class="hidden page-fade-in" aria-live="polite" aria-labelledby="empty-title-text">
+      <nav class="app-top-nav" aria-label="Empty state navigation">
+        <button class="btn-nav-back" id="btn-back-empty" type="button" aria-label="Go back">
+          ← Back
+        </button>
+        <button class="btn-nav-home" id="btn-home-empty-nav" type="button" aria-label="Go to Home">
+          🏠 Home
+        </button>
+      </nav>
       <div class="empty-icon" aria-hidden="true">🅿️</div>
       <h2 class="empty-title" id="empty-title-text">No parking found nearby</h2>
       <p class="empty-sub" id="empty-sub-text">We searched within a 5 km radius. OSM data may be sparse here — try a different area.</p>
       <div class="empty-actions">
         <button class="btn-primary" id="btn-retry-empty" type="button">Try Another Location</button>
-        <button class="btn-secondary" id="btn-home-empty" type="button">← Back to Home</button>
+        <button class="btn-secondary" id="btn-home-empty" type="button">🏠 Back to Home</button>
       </div>
     </section>
 
     <!-- STATE 7: Error -->
-    <div id="error-state" class="error-state hidden" role="alert" aria-live="assertive">
+    <div id="error-state" class="error-state hidden page-fade-in" role="alert" aria-live="assertive">
+      <nav class="app-top-nav" aria-label="Error state navigation">
+        <button class="btn-nav-back" id="btn-back-error" type="button" aria-label="Go back">
+          ← Back
+        </button>
+        <button class="btn-nav-home" id="btn-home-error-nav" type="button" aria-label="Go to Home">
+          🏠 Home
+        </button>
+      </nav>
       <p class="error-title">Something went wrong</p>
       <p class="error-sub" id="error-detail">Could not load parking data. Please check your connection and try again.</p>
       <div class="error-actions">
         <button class="btn-primary" id="btn-retry-error" type="button">Retry</button>
-        <button class="btn-secondary" id="btn-home-error" type="button">← Back to Home</button>
+        <button class="btn-secondary" id="btn-home-error" type="button">🏠 Back to Home</button>
       </div>
     </div>
 
   </main><!-- /#main -->
 
 </div><!-- /#app -->
+
+<!-- ── STATE 8: Details Bottom Sheet Modal ── -->
+<div id="details-modal" class="modal-backdrop hidden" aria-hidden="true" role="dialog" aria-labelledby="modal-spot-name">
+  <div class="modal-sheet page-slide-up">
+    <nav class="app-top-nav modal-nav" aria-label="Modal navigation">
+      <button class="btn-nav-back" id="btn-modal-back" type="button">← Back to Results</button>
+      <button class="btn-nav-home" id="btn-modal-home" type="button">🏠 Home</button>
+    </nav>
+    <div class="modal-header">
+      <div class="card-badges">
+        <span class="card-rank" id="modal-rank">#1 Nearest</span>
+        <span class="badge-access public" id="modal-access">Public</span>
+      </div>
+      <h2 class="modal-title" id="modal-spot-name">TVC Gate 2 Parking</h2>
+      <div class="modal-dist-badge" id="modal-dist">150m away</div>
+    </div>
+    <div class="modal-body">
+      <div class="detail-row">
+        <span class="detail-label">📍 Address / Locality</span>
+        <span class="detail-val" id="modal-address">Station Road, Thiruvananthapuram</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">🌐 Coordinates</span>
+        <span class="detail-val" id="modal-coords">8.486074, 76.949912</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">🏷️ Attributes</span>
+        <div class="card-meta" id="modal-tags">
+          <span class="meta-tag">Surface</span>
+          <span class="meta-tag">Paid</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary btn-modal-nav" id="btn-modal-navigate" type="button">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+        Navigate in Maps
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- Scroll-to-top FAB -->
 <button id="fab-top" aria-label="Scroll to top" type="button" title="Back to top">
