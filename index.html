@@ -45,19 +45,34 @@
   <!-- ── Main content area ── -->
   <main id="main">
 
-    <!-- STATE: Requesting permission (shown briefly before auto-request fires) -->
-    <section id="permission-prompt" class="hidden" aria-labelledby="perm-title-text">
-      <div class="perm-icon" aria-hidden="true">📍</div>
-      <h1 class="perm-title" id="perm-title-text">Find parking<br>near you</h1>
-      <p class="perm-sub">WIMP needs your location to show the closest parking spots — nothing is stored.</p>
-      <button class="btn-grant" id="btn-grant-location" type="button">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
-        Enable Location
-      </button>
-      <button class="btn-retry" id="btn-enter-manually" type="button">Enter location manually instead</button>
+    <!-- STATE 1: Splash / Boot screen -->
+    <section id="splash-screen" class="splash-container" aria-labelledby="splash-title">
+      <div class="splash-icon" aria-hidden="true">P</div>
+      <h1 class="splash-title" id="splash-title">WhereIsMyParking</h1>
+      <p class="splash-sub">Kerala Parking Discovery</p>
+      <div class="splash-loader" aria-hidden="true">
+        <div class="spinner"></div>
+      </div>
     </section>
 
-    <!-- STATE: Skeleton loading -->
+    <!-- STATE 2: Landing screen -->
+    <section id="landing-screen" class="landing-container hidden" aria-labelledby="landing-title">
+      <div class="landing-hero-icon" aria-hidden="true">🅿️</div>
+      <h1 class="landing-title" id="landing-title">Find parking<br>near you</h1>
+      <p class="landing-sub">Discover closest parking spots in Kerala in seconds. No friction, zero waiting.</p>
+      
+      <div class="landing-actions">
+        <button class="btn-primary" id="btn-grant-location" type="button">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          📍 Use My Current Location
+        </button>
+        <button class="btn-secondary" id="btn-enter-manually" type="button">
+          ⌨️ Enter Location Manually
+        </button>
+      </div>
+    </section>
+
+    <!-- STATE 3: Skeleton loading -->
     <div id="skeleton-state" class="skeleton-list hidden" aria-label="Loading parking results" role="status">
       <div class="skeleton-card">
         <div class="sk-line w40"></div>
@@ -79,8 +94,13 @@
       </div>
     </div>
 
-    <!-- STATE: Results -->
+    <!-- STATE 4: Results -->
     <section id="results-section" class="hidden" aria-labelledby="results-heading">
+      <div class="nav-bar-top">
+        <button class="btn-back-home" id="btn-back-home-results" type="button">
+          ← Back to Home
+        </button>
+      </div>
       <h2 class="sr-only" id="results-heading">Nearby parking spots</h2>
       <div id="results-header">
         <span class="results-count" id="results-count-label"></span>
@@ -89,8 +109,13 @@
       <ol id="results-list" aria-label="Parking locations sorted by distance"></ol>
     </section>
 
-    <!-- STATE: Fallback manual input (location denied) -->
+    <!-- STATE 5: Fallback manual input -->
     <section id="fallback-panel" class="hidden" aria-labelledby="fallback-label">
+      <div class="nav-bar-top">
+        <button class="btn-back-home" id="btn-back-home-fallback" type="button">
+          ← Back to Home
+        </button>
+      </div>
       <p class="fallback-label" id="fallback-label">Enter a locality or landmark in Kerala</p>
       <div class="fallback-row">
         <input
@@ -109,26 +134,32 @@
       <div id="geocode-error" class="error-sub hidden"></div>
     </section>
 
-    <!-- STATE: Empty — no results found -->
+    <!-- STATE 6: Empty — no results found -->
     <section id="empty-state" class="hidden" aria-live="polite" aria-labelledby="empty-title-text">
       <div class="empty-icon" aria-hidden="true">🅿️</div>
       <h2 class="empty-title" id="empty-title-text">No parking found nearby</h2>
       <p class="empty-sub" id="empty-sub-text">We searched within a 5 km radius. OSM data may be sparse here — try a different area.</p>
-      <button class="btn-retry" id="btn-retry-empty" type="button">Try a different location</button>
+      <div class="empty-actions">
+        <button class="btn-primary" id="btn-retry-empty" type="button">Try Another Location</button>
+        <button class="btn-secondary" id="btn-home-empty" type="button">← Back to Home</button>
+      </div>
     </section>
 
-    <!-- STATE: Error (API failure) -->
+    <!-- STATE 7: Error -->
     <div id="error-state" class="error-state hidden" role="alert" aria-live="assertive">
       <p class="error-title">Something went wrong</p>
       <p class="error-sub" id="error-detail">Could not load parking data. Please check your connection and try again.</p>
-      <button class="btn-retry" id="btn-retry-error" type="button" style="margin-top:0.5rem">Retry</button>
+      <div class="error-actions">
+        <button class="btn-primary" id="btn-retry-error" type="button">Retry</button>
+        <button class="btn-secondary" id="btn-home-error" type="button">← Back to Home</button>
+      </div>
     </div>
 
   </main><!-- /#main -->
 
 </div><!-- /#app -->
 
-<!-- Scroll-to-top FAB (visible after scrolling on long results) -->
+<!-- Scroll-to-top FAB -->
 <button id="fab-top" aria-label="Scroll to top" type="button" title="Back to top">
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <polyline points="18 15 12 9 6 15"/>
@@ -138,7 +169,6 @@
 <script src="app.js" defer></script>
 
 <script>
-  // Service worker registration
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js').catch(() => {});
