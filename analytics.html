@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="robots" content="noindex,nofollow"/>
+  <title>WIMP — PMF Analytics Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    /* Analytics-specific overrides */
+    body { background: #060a14; }
+    #analytics-app {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem 3rem;
+    }
+    .dash-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 0 1.5rem;
+      border-bottom: 1px solid var(--c-border);
+      margin-bottom: 1.5rem;
+    }
+    .dash-title { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.02em; }
+    .dash-sub   { font-size: 0.75rem; color: var(--c-text-sub); margin-top: 0.2rem; }
+    .btn-clear  {
+      font-size: 0.75rem; font-weight: 600;
+      color: #ef4444; background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.25);
+      padding: 0.35rem 0.75rem; border-radius: var(--r-md);
+      cursor: pointer; transition: background 150ms;
+    }
+    .btn-clear:hover { background: rgba(239,68,68,0.2); }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .kpi-card {
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-lg);
+      padding: 1rem 1.125rem;
+    }
+    .kpi-label { font-size: 0.7rem; font-weight: 600; color: var(--c-text-sub); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; }
+    .kpi-value { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+    .kpi-sub   { font-size: 0.72rem; color: var(--c-text-dim); margin-top: 0.3rem; }
+    .kpi-card.highlight { border-color: var(--c-accent); background: rgba(59,130,246,0.07); }
+    .kpi-card.highlight .kpi-value { color: var(--c-accent); }
+
+    .threshold-bar-wrap {
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-lg);
+      padding: 1rem 1.125rem;
+      margin-bottom: 0.75rem;
+    }
+    .threshold-label { font-size: 0.8rem; font-weight: 600; color: var(--c-text-sub); margin-bottom: 0.5rem; display: flex; justify-content: space-between; }
+    .bar-track { height: 0.5rem; background: var(--c-surface-2); border-radius: var(--r-full); overflow: hidden; }
+    .bar-fill  { height: 100%; border-radius: var(--r-full); transition: width 0.6s var(--ease-out); }
+    .bar-fill.green  { background: var(--c-ok); }
+    .bar-fill.blue   { background: var(--c-accent); }
+    .bar-fill.yellow { background: var(--c-warn); }
+    .threshold-markers { position: relative; height: 1.2rem; margin-top: 0.25rem; }
+    .t-mark { position: absolute; font-size: 0.62rem; color: var(--c-text-dim); transform: translateX(-50%); }
+
+    .verdict-box {
+      border-radius: var(--r-lg);
+      padding: 1rem 1.125rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+    .verdict-box.pass    { background: rgba(34,197,94,0.08);  border: 1px solid rgba(34,197,94,0.3); }
+    .verdict-box.warn    { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.3); }
+    .verdict-box.fail    { background: rgba(239,68,68,0.08);  border: 1px solid rgba(239,68,68,0.3); }
+    .verdict-box.neutral { background: var(--c-surface);      border: 1px solid var(--c-border); }
+    .verdict-title { font-weight: 700; margin-bottom: 0.3rem; }
+
+    .section-title {
+      font-size: 0.75rem; font-weight: 700; color: var(--c-text-sub);
+      text-transform: uppercase; letter-spacing: 0.05em;
+      margin: 1.5rem 0 0.75rem;
+    }
+
+    .event-log {
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    .event-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--c-border);
+      font-size: 0.78rem;
+    }
+    .event-row:last-child { border-bottom: none; }
+    .ev-time  { color: var(--c-text-dim); white-space: nowrap; flex-shrink: 0; }
+    .ev-name  { font-weight: 600; flex: 1; }
+    .ev-meta  { color: var(--c-text-sub); white-space: nowrap; }
+    .ev-dot   { width: 0.45rem; height: 0.45rem; border-radius: 50%; flex-shrink: 0; }
+
+    .empty-log { padding: 2rem; text-align: center; color: var(--c-text-dim); font-size: 0.85rem; }
+
+    .export-row { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+    .btn-export {
+      font-size: 0.8rem; font-weight: 600;
+      background: var(--c-surface-2); color: var(--c-text);
+      border: 1px solid var(--c-border); border-radius: var(--r-md);
+      padding: 0.5rem 1rem; cursor: pointer; transition: background 150ms;
+    }
+    .btn-export:hover { background: var(--c-surface); }
+
+    .note { font-size: 0.75rem; color: var(--c-text-dim); line-height: 1.6; margin-top: 1.5rem; padding: 0.75rem; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-md); }
+  </style>
+</head>
+<body>
+<div id="analytics-app">
+
+  <div class="dash-header">
+    <div>
+      <div class="logo" style="margin-bottom:0.25rem">
+        <div class="logo-icon" style="display:inline-flex;margin-right:0.5rem">P</div>
+        <span class="dash-title">PMF Analytics</span>
+      </div>
+      <div class="dash-sub">WhereIsMyParking — Local session tracker</div>
+    </div>
+    <button class="btn-clear" id="btn-clear" type="button">Clear data</button>
+  </div>
+
+  <!-- KPI grid -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Sessions</div>
+      <div class="kpi-value" id="kpi-sessions">—</div>
+      <div class="kpi-sub">Total starts</div>
+    </div>
+    <div class="kpi-card highlight">
+      <div class="kpi-label">Tap-through rate</div>
+      <div class="kpi-value" id="kpi-ttr">—</div>
+      <div class="kpi-sub">Navigate tapped / session</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Location grant rate</div>
+      <div class="kpi-value" id="kpi-grant">—</div>
+      <div class="kpi-sub">Auto-GPS success</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Empty state rate</div>
+      <div class="kpi-value" id="kpi-empty">—</div>
+      <div class="kpi-sub">No results found</div>
+    </div>
+  </div>
+
+  <!-- Tap-through bar -->
+  <div class="threshold-bar-wrap">
+    <div class="threshold-label">
+      <span>Tap-through rate</span>
+      <span id="ttr-pct-label">—</span>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill green" id="ttr-bar" style="width:0%"></div>
+    </div>
+    <div class="threshold-markers">
+      <span class="t-mark" style="left:15%">15% kill</span>
+      <span class="t-mark" style="left:25%">25% ✓</span>
+    </div>
+  </div>
+
+  <!-- Location grant bar -->
+  <div class="threshold-bar-wrap">
+    <div class="threshold-label">
+      <span>Location grant rate</span>
+      <span id="grant-pct-label">—</span>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill blue" id="grant-bar" style="width:0%"></div>
+    </div>
+    <div class="threshold-markers">
+      <span class="t-mark" style="left:60%">60% target</span>
+    </div>
+  </div>
+
+  <!-- PMF Verdict -->
+  <div class="verdict-box neutral" id="verdict-box">
+    <div class="verdict-title" id="verdict-title">Not enough data yet</div>
+    <div id="verdict-detail">Run the app and collect sessions to see your PMF signal here.</div>
+  </div>
+
+  <!-- Event log -->
+  <div class="section-title">Raw Event Log</div>
+  <div class="event-log" id="event-log">
+    <div class="empty-log">No events recorded yet.<br>Open the app and interact with it.</div>
+  </div>
+
+  <div class="export-row">
+    <button class="btn-export" id="btn-export-csv" type="button">Export CSV</button>
+    <button class="btn-export" id="btn-export-json" type="button">Export JSON</button>
+    <button class="btn-export" id="btn-refresh" type="button">↻ Refresh</button>
+  </div>
+
+  <p class="note">
+    📌 This dashboard reads from <strong>localStorage</strong> in this browser.
+    Events are stored only on this device. For multi-device analytics,
+    set <code>CONFIG.analyticsUrl</code> in <code>app.js</code> to a real endpoint.
+  </p>
+
+</div>
+
+<script>
+'use strict';
+
+const STORAGE_KEY = 'wimp_analytics_events';
+
+function loadEvents() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+  catch(_) { return []; }
+}
+
+const EVENT_COLORS = {
+  session_start:     '#94a3b8',
+  location_granted:  '#22c55e',
+  location_denied:   '#ef4444',
+  results_shown:     '#3b82f6',
+  navigate_tapped:   '#a855f7',
+  empty_state_hit:   '#f59e0b',
+};
+
+function fmtTime(ts) {
+  const d = new Date(ts);
+  return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+function fmtPct(n) { return n === null ? '—' : Math.round(n) + '%'; }
+
+function computeMetrics(events) {
+  const sessions  = events.filter(e => e.event === 'session_start').length;
+  const granted   = events.filter(e => e.event === 'location_granted').length;
+  const denied    = events.filter(e => e.event === 'location_denied').length;
+  const navigated = events.filter(e => e.event === 'navigate_tapped').length;
+  const empty     = events.filter(e => e.event === 'empty_state_hit').length;
+
+  return {
+    sessions,
+    ttr:        sessions > 0 ? (navigated / sessions) * 100 : null,
+    grantRate:  (granted + denied) > 0 ? (granted / (granted + denied)) * 100 : null,
+    emptyRate:  sessions > 0 ? (empty / sessions) * 100 : null,
+    navigated,
+    granted,
+  };
+}
+
+function renderVerdict(m) {
+  const box = document.getElementById('verdict-box');
+  const tit = document.getElementById('verdict-title');
+  const det = document.getElementById('verdict-detail');
+
+  if (m.sessions < 10) {
+    box.className = 'verdict-box neutral';
+    tit.textContent = 'Collecting data…';
+    det.textContent = `${m.sessions} sessions recorded. Need at least 10 to read the signal.`;
+    return;
+  }
+
+  const ttr = m.ttr;
+  if (ttr >= 25) {
+    box.className = 'verdict-box pass';
+    tit.textContent = '✅ PMF signal: Strong';
+    det.textContent = `${Math.round(ttr)}% tap-through rate — above the 25% threshold. Move to V2 scoping.`;
+  } else if (ttr >= 15) {
+    box.className = 'verdict-box warn';
+    tit.textContent = '⚠️ PMF signal: Weak';
+    det.textContent = `${Math.round(ttr)}% tap-through rate — between 15–25%. One focused iteration (radius tuning, result clarity) then re-test.`;
+  } else {
+    box.className = 'verdict-box fail';
+    tit.textContent = '❌ PMF signal: Kill / Rework';
+    det.textContent = `${Math.round(ttr)}% tap-through rate — below 15%. The discovery-only wedge may not be strong enough; revisit the premise.`;
+  }
+}
+
+function render() {
+  const events  = loadEvents();
+  const m       = computeMetrics(events);
+
+  // KPIs
+  document.getElementById('kpi-sessions').textContent = m.sessions || '0';
+  document.getElementById('kpi-ttr').textContent      = fmtPct(m.ttr);
+  document.getElementById('kpi-grant').textContent    = fmtPct(m.grantRate);
+  document.getElementById('kpi-empty').textContent    = fmtPct(m.emptyRate);
+
+  // Bars
+  const ttrPct = Math.min(m.ttr ?? 0, 100);
+  document.getElementById('ttr-bar').style.width      = ttrPct + '%';
+  document.getElementById('ttr-pct-label').textContent = fmtPct(m.ttr);
+
+  const grantPct = Math.min(m.grantRate ?? 0, 100);
+  document.getElementById('grant-bar').style.width      = grantPct + '%';
+  document.getElementById('grant-pct-label').textContent = fmtPct(m.grantRate);
+
+  // TTR bar color
+  const ttrBar = document.getElementById('ttr-bar');
+  ttrBar.className = 'bar-fill ' + ((m.ttr ?? 0) >= 25 ? 'green' : (m.ttr ?? 0) >= 15 ? 'yellow' : 'bar-fill');
+
+  // Verdict
+  renderVerdict(m);
+
+  // Event log
+  const log = document.getElementById('event-log');
+  if (!events.length) {
+    log.innerHTML = '<div class="empty-log">No events recorded yet.<br>Open the app and interact with it.</div>';
+    return;
+  }
+  log.innerHTML = [...events].reverse().map(ev => `
+    <div class="event-row">
+      <div class="ev-dot" style="background:${EVENT_COLORS[ev.event] || '#475569'}"></div>
+      <span class="ev-time">${fmtTime(ev.ts)}</span>
+      <span class="ev-name">${ev.event}</span>
+      <span class="ev-meta">${ev.count != null ? ev.count + ' results' : ev.radius ? ev.radius + 'm' : ev.reason || ''}</span>
+    </div>
+  `).join('');
+}
+
+// Export CSV
+document.getElementById('btn-export-csv').addEventListener('click', () => {
+  const events = loadEvents();
+  const rows   = [['timestamp','event','count','radius','reason','lat','lng','name']];
+  events.forEach(e => rows.push([
+    new Date(e.ts).toISOString(), e.event, e.count??'', e.radius??'',
+    e.reason??'', e.lat??'', e.lng??'', e.name??''
+  ]));
+  const csv  = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a    = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'wimp-analytics.csv' });
+  a.click();
+});
+
+// Export JSON
+document.getElementById('btn-export-json').addEventListener('click', () => {
+  const json = JSON.stringify(loadEvents(), null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const a    = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'wimp-analytics.json' });
+  a.click();
+});
+
+// Clear
+document.getElementById('btn-clear').addEventListener('click', () => {
+  if (confirm('Clear all analytics data? This cannot be undone.')) {
+    localStorage.removeItem(STORAGE_KEY);
+    render();
+  }
+});
+
+// Refresh
+document.getElementById('btn-refresh').addEventListener('click', render);
+
+// Auto-refresh every 5 seconds
+setInterval(render, 5000);
+
+render();
+</script>
+</body>
+</html>

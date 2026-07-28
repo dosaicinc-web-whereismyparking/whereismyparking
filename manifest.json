@@ -1,0 +1,27 @@
+{
+  "name": "WhereIsMyParking",
+  "short_name": "WIMP",
+  "description": "Find the nearest parking spots around you in seconds. No sign-up, no friction.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0a0f1e",
+  "theme_color": "#0a0f1e",
+  "lang": "en",
+  "scope": "/",
+  "categories": ["navigation", "utilities", "travel"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

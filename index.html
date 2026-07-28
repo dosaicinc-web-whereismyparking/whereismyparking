@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0f1e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="WIMP" />
+
+  <title>WhereIsMyParking — Find parking near you in Kerala</title>
+  <meta name="description" content="Find the nearest parking spots around you in seconds. No sign-up, no friction — just open, tap, and navigate. Powered by OpenStreetMap data for Kerala." />
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+
+  <!-- Styles -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div id="app" role="main">
+
+  <!-- ── Header ── -->
+  <header id="header" role="banner">
+    <div class="logo">
+      <div class="logo-icon" aria-hidden="true">P</div>
+      <div>
+        <div class="logo-name">WhereIsMyParking</div>
+        <div class="logo-sub">Kerala · Powered by OSM</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Status bar ── -->
+  <div id="status-bar" role="status" aria-live="polite" aria-atomic="true">
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-text">Initialising…</span>
+  </div>
+
+  <!-- ── Main content area ── -->
+  <main id="main">
+
+    <!-- STATE: Requesting permission (shown briefly before auto-request fires) -->
+    <section id="permission-prompt" class="hidden" aria-labelledby="perm-title-text">
+      <div class="perm-icon" aria-hidden="true">📍</div>
+      <h1 class="perm-title" id="perm-title-text">Find parking<br>near you</h1>
+      <p class="perm-sub">WIMP needs your location to show the closest parking spots — nothing is stored.</p>
+      <button class="btn-grant" id="btn-grant-location" type="button">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        Enable Location
+      </button>
+      <button class="btn-retry" id="btn-enter-manually" type="button">Enter location manually instead</button>
+    </section>
+
+    <!-- STATE: Skeleton loading -->
+    <div id="skeleton-state" class="skeleton-list hidden" aria-label="Loading parking results" role="status">
+      <div class="skeleton-card">
+        <div class="sk-line w40"></div>
+        <div class="sk-line w80"></div>
+        <div class="sk-line w60"></div>
+        <div class="sk-btn"></div>
+      </div>
+      <div class="skeleton-card">
+        <div class="sk-line w40"></div>
+        <div class="sk-line w80"></div>
+        <div class="sk-line w60"></div>
+        <div class="sk-btn"></div>
+      </div>
+      <div class="skeleton-card">
+        <div class="sk-line w40"></div>
+        <div class="sk-line w60"></div>
+        <div class="sk-line w40"></div>
+        <div class="sk-btn"></div>
+      </div>
+    </div>
+
+    <!-- STATE: Results -->
+    <section id="results-section" class="hidden" aria-labelledby="results-heading">
+      <h2 class="sr-only" id="results-heading">Nearby parking spots</h2>
+      <div id="results-header">
+        <span class="results-count" id="results-count-label"></span>
+        <span class="results-radius" id="results-radius-label"></span>
+      </div>
+      <ol id="results-list" aria-label="Parking locations sorted by distance"></ol>
+    </section>
+
+    <!-- STATE: Fallback manual input (location denied) -->
+    <section id="fallback-panel" class="hidden" aria-labelledby="fallback-label">
+      <p class="fallback-label" id="fallback-label">Enter a locality or landmark in Kerala</p>
+      <div class="fallback-row">
+        <input
+          type="search"
+          id="fallback-input"
+          class="fallback-input"
+          placeholder="e.g. MG Road, Ernakulam…"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+          enterkeyhint="search"
+          aria-label="Location search"
+        />
+        <button class="btn-search" id="btn-fallback-search" type="button">Search</button>
+      </div>
+      <div id="geocode-error" class="error-sub hidden"></div>
+    </section>
+
+    <!-- STATE: Empty — no results found -->
+    <section id="empty-state" class="hidden" aria-live="polite" aria-labelledby="empty-title-text">
+      <div class="empty-icon" aria-hidden="true">🅿️</div>
+      <h2 class="empty-title" id="empty-title-text">No parking found nearby</h2>
+      <p class="empty-sub" id="empty-sub-text">We searched within a 5 km radius. OSM data may be sparse here — try a different area.</p>
+      <button class="btn-retry" id="btn-retry-empty" type="button">Try a different location</button>
+    </section>
+
+    <!-- STATE: Error (API failure) -->
+    <div id="error-state" class="error-state hidden" role="alert" aria-live="assertive">
+      <p class="error-title">Something went wrong</p>
+      <p class="error-sub" id="error-detail">Could not load parking data. Please check your connection and try again.</p>
+      <button class="btn-retry" id="btn-retry-error" type="button" style="margin-top:0.5rem">Retry</button>
+    </div>
+
+  </main><!-- /#main -->
+
+</div><!-- /#app -->
+
+<!-- Scroll-to-top FAB (visible after scrolling on long results) -->
+<button id="fab-top" aria-label="Scroll to top" type="button" title="Back to top">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <polyline points="18 15 12 9 6 15"/>
+  </svg>
+</button>
+
+<script src="app.js" defer></script>
+
+<script>
+  // Service worker registration
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+</script>
+
+</body>
+</html>
