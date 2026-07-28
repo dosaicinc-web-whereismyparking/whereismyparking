@@ -1,11 +1,11 @@
 /**
  * WIMP — WhereIsMyParking
- * app.js | v3 — UX Flow Refactor (Splash, Landing, Rotate Status, Static Address, Back to Home)
+ * app.js | v3.1 — Session Freshness & UX Flow
  *
  * Data layer & analytics are 100% preserved:
- *   - Static dataset: /data/kerala-parking.json (zero live Overpass calls)
- *   - PMF Analytics: track('session_start'), track('location_granted'), etc.
- *   - Address data: sourced 100% from static dataset (no live geocoding per card)
+ *   - Static dataset: /data/kerala-parking.json (HTTP cache intact)
+ *   - PMF Analytics: track() calls and localStorage history intact
+ *   - Fresh session: UI resets to Splash -> Landing on load/reload/BFCache
  */
 
 'use strict';
@@ -153,10 +153,10 @@ function track(event, payload = {}) {
 }
 
 /* ─────────────────────────────────────────
-   STATIC DATA LAYER (NO LIVE OVERPASS)
+   STATIC DATA LAYER (HTTP CACHE INTACT)
 ───────────────────────────────────────── */
 async function ensureDataLoaded() {
-  if (state.allLots !== null) return true;   // already loaded
+  if (state.allLots !== null) return true;   // already loaded in memory
   if (state.dataError) return false;         // already failed
 
   try {
@@ -492,17 +492,28 @@ function bindEvents() {
 /* ─────────────────────────────────────────
    INIT & BOOT FLOW
 ───────────────────────────────────────── */
-function init() {
-  bindEvents();
+let eventsBound = false;
 
-  // Show splash screen on boot
+function init() {
+  if (!eventsBound) {
+    bindEvents();
+    eventsBound = true;
+  }
+
+  // Reset transient in-memory session UI state on load/reload
+  state.lat = null;
+  state.lng = null;
+  state.lots = [];
+  state.splashDone = false;
+
+  // Show splash screen on fresh boot
   showState('splashScreen');
   setStatus('Booting WIMP…', 'loading');
 
-  // Pre-fetch dataset in parallel
+  // Pre-fetch dataset in parallel (browser HTTP cache intact)
   ensureDataLoaded().catch(() => {});
 
-  // Transition out of splash screen after 1.8s max
+  // Transition out of splash screen after max duration
   setTimeout(() => {
     state.splashDone = true;
     showLanding();
@@ -510,3 +521,10 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// Handle BFCache (back/forward browser navigation) to ensure fresh session state
+window.addEventListener('pageshow', event => {
+  if (event.persisted) {
+    init();
+  }
+});
