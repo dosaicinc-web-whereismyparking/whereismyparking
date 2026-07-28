@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="robots" content="noindex,nofollow,noarchive"/>
+  <title>WIMP — PMF Analytics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    body { background: #060a14; }
+
+    /* ── Lock screen ── */
+    #lock-screen {
+      position: fixed; inset: 0;
+      background: #060a14;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 1.5rem; z-index: 9999;
+      padding: 2rem;
+    }
+    .lock-icon { font-size: 3rem; }
+    .lock-title { font-family: 'Inter', system-ui, sans-serif; font-size: 1.4rem; font-weight: 800; color: #f1f5f9; }
+    .lock-sub   { font-family: 'Inter', system-ui, sans-serif; font-size: 0.85rem; color: #94a3b8; }
+    .lock-input {
+      width: 100%; max-width: 320px;
+      background: #111827; border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 0.875rem; padding: 0.85rem 1rem;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 1rem; color: #f1f5f9; outline: none;
+      transition: border-color 150ms;
+      -webkit-appearance: none;
+    }
+    .lock-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.25); }
+    .lock-btn {
+      width: 100%; max-width: 320px;
+      background: #3b82f6; color: #fff;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 1rem; font-weight: 700;
+      border: none; border-radius: 0.875rem;
+      padding: 0.9rem 1.5rem; cursor: pointer;
+      transition: background 150ms;
+    }
+    .lock-btn:hover { background: #2563eb; }
+    .lock-error {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 0.82rem; color: #f87171;
+      display: none;
+    }
+    .lock-error.show { display: block; }
+
+    /* ── Dashboard ── */
+    #analytics-app {
+      max-width: 600px; margin: 0 auto;
+      padding: 1.5rem 1rem 3rem;
+      display: none;
+    }
+    #analytics-app.unlocked { display: block; }
+
+    .dash-header {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 1rem 0 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      margin-bottom: 1.5rem;
+    }
+    .dash-title { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.02em; }
+    .dash-sub   { font-size: 0.75rem; color: #94a3b8; margin-top: 0.2rem; }
+    .btn-clear {
+      font-size: 0.75rem; font-weight: 600;
+      color: #ef4444; background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.25);
+      padding: 0.35rem 0.75rem; border-radius: 0.875rem;
+      cursor: pointer; transition: background 150ms;
+    }
+    .btn-clear:hover { background: rgba(239,68,68,0.2); }
+
+    .kpi-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 0.75rem; margin-bottom: 1.5rem;
+    }
+    .kpi-card {
+      background: #111827; border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 1.25rem; padding: 1rem 1.125rem;
+    }
+    .kpi-label { font-size: 0.7rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; }
+    .kpi-value { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+    .kpi-sub   { font-size: 0.72rem; color: #475569; margin-top: 0.3rem; }
+    .kpi-card.highlight { border-color: #3b82f6; background: rgba(59,130,246,0.07); }
+    .kpi-card.highlight .kpi-value { color: #3b82f6; }
+
+    .threshold-bar-wrap {
+      background: #111827; border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 1.25rem; padding: 1rem 1.125rem; margin-bottom: 0.75rem;
+    }
+    .threshold-label { font-size: 0.8rem; font-weight: 600; color: #94a3b8; margin-bottom: 0.5rem; display: flex; justify-content: space-between; }
+    .bar-track { height: 0.5rem; background: #1a2235; border-radius: 9999px; overflow: hidden; }
+    .bar-fill  { height: 100%; border-radius: 9999px; transition: width 0.6s cubic-bezier(0.16,1,0.3,1); }
+    .bar-fill.green  { background: #22c55e; }
+    .bar-fill.blue   { background: #3b82f6; }
+    .bar-fill.yellow { background: #f59e0b; }
+    .threshold-markers { position: relative; height: 1.2rem; margin-top: 0.25rem; }
+    .t-mark { position: absolute; font-size: 0.62rem; color: #475569; transform: translateX(-50%); }
+
+    .verdict-box {
+      border-radius: 1.25rem; padding: 1rem 1.125rem; margin-bottom: 1.5rem;
+      font-size: 0.85rem; line-height: 1.5;
+    }
+    .verdict-box.pass    { background: rgba(34,197,94,0.08);  border: 1px solid rgba(34,197,94,0.3); }
+    .verdict-box.warn    { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.3); }
+    .verdict-box.fail    { background: rgba(239,68,68,0.08);  border: 1px solid rgba(239,68,68,0.3); }
+    .verdict-box.neutral { background: #111827; border: 1px solid rgba(255,255,255,0.08); }
+    .verdict-title { font-weight: 700; margin-bottom: 0.3rem; }
+
+    .section-title {
+      font-size: 0.75rem; font-weight: 700; color: #94a3b8;
+      text-transform: uppercase; letter-spacing: 0.05em; margin: 1.5rem 0 0.75rem;
+    }
+    .event-log {
+      background: #111827; border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 1.25rem; overflow: hidden; max-height: 320px; overflow-y: auto;
+    }
+    .event-row {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.65rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 0.78rem;
+    }
+    .event-row:last-child { border-bottom: none; }
+    .ev-time  { color: #475569; white-space: nowrap; flex-shrink: 0; }
+    .ev-name  { font-weight: 600; flex: 1; }
+    .ev-meta  { color: #94a3b8; white-space: nowrap; }
+    .ev-dot   { width: 0.45rem; height: 0.45rem; border-radius: 50%; flex-shrink: 0; }
+    .empty-log { padding: 2rem; text-align: center; color: #475569; font-size: 0.85rem; }
+
+    .source-badge {
+      font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; padding: 0.15rem 0.4rem; border-radius: 0.25rem;
+      flex-shrink: 0;
+    }
+    .source-badge.remote { background: rgba(59,130,246,0.2); color: #93c5fd; }
+    .source-badge.local  { background: rgba(148,163,184,0.15); color: #94a3b8; }
+
+    .export-row { display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap; }
+    .btn-export {
+      font-size: 0.8rem; font-weight: 600; background: #1a2235; color: #f1f5f9;
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 0.875rem;
+      padding: 0.5rem 1rem; cursor: pointer; transition: background 150ms;
+    }
+    .btn-export:hover { background: #111827; }
+
+    .analytics-source-bar {
+      background: #111827; border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 0.875rem; padding: 0.65rem 1rem;
+      font-size: 0.75rem; color: #94a3b8; margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .source-dot { width: 0.45rem; height: 0.45rem; border-radius: 50%; background: #475569; flex-shrink: 0; }
+    .source-dot.remote { background: #3b82f6; box-shadow: 0 0 6px #3b82f6; }
+
+    .note {
+      font-size: 0.75rem; color: #475569; line-height: 1.6; margin-top: 1.5rem;
+      padding: 0.75rem; background: #111827; border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Lock Screen ── -->
+<div id="lock-screen">
+  <div class="lock-icon">🔒</div>
+  <div class="lock-title">PMF Analytics</div>
+  <div class="lock-sub">Enter your access passphrase</div>
+  <input type="password" class="lock-input" id="lock-input"
+    placeholder="Passphrase…" autocomplete="off" autocorrect="off"/>
+  <div class="lock-error" id="lock-error">Incorrect passphrase</div>
+  <button class="lock-btn" id="lock-btn" type="button">Unlock Dashboard</button>
+</div>
+
+<!-- ── Analytics Dashboard ── -->
+<div id="analytics-app">
+  <div class="dash-header">
+    <div>
+      <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem">
+        <div style="width:2rem;height:2rem;background:#3b82f6;border-radius:0.5rem;display:grid;place-items:center;font-weight:800;color:#fff;font-size:1rem">P</div>
+        <span class="dash-title">PMF Analytics</span>
+      </div>
+      <div class="dash-sub">WhereIsMyParking — Cross-device session tracker</div>
+    </div>
+    <button class="btn-clear" id="btn-clear" type="button">Clear all data</button>
+  </div>
+
+  <!-- Data source indicator -->
+  <div class="analytics-source-bar" id="source-bar">
+    <div class="source-dot" id="source-dot"></div>
+    <span id="source-label">Loading data…</span>
+  </div>
+
+  <!-- KPI grid -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Sessions</div>
+      <div class="kpi-value" id="kpi-sessions">—</div>
+      <div class="kpi-sub">Total starts</div>
+    </div>
+    <div class="kpi-card highlight">
+      <div class="kpi-label">Tap-through rate</div>
+      <div class="kpi-value" id="kpi-ttr">—</div>
+      <div class="kpi-sub">Navigate tapped / session</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Location grant rate</div>
+      <div class="kpi-value" id="kpi-grant">—</div>
+      <div class="kpi-sub">Auto-GPS success</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Empty state rate</div>
+      <div class="kpi-value" id="kpi-empty">—</div>
+      <div class="kpi-sub">No results found</div>
+    </div>
+  </div>
+
+  <!-- Tap-through bar -->
+  <div class="threshold-bar-wrap">
+    <div class="threshold-label">
+      <span>Tap-through rate</span>
+      <span id="ttr-pct-label">—</span>
+    </div>
+    <div class="bar-track"><div class="bar-fill green" id="ttr-bar" style="width:0%"></div></div>
+    <div class="threshold-markers">
+      <span class="t-mark" style="left:15%">15% kill</span>
+      <span class="t-mark" style="left:25%">25% ✓</span>
+    </div>
+  </div>
+
+  <!-- Location grant bar -->
+  <div class="threshold-bar-wrap">
+    <div class="threshold-label">
+      <span>Location grant rate</span>
+      <span id="grant-pct-label">—</span>
+    </div>
+    <div class="bar-track"><div class="bar-fill blue" id="grant-bar" style="width:0%"></div></div>
+    <div class="threshold-markers">
+      <span class="t-mark" style="left:60%">60% target</span>
+    </div>
+  </div>
+
+  <!-- PMF Verdict -->
+  <div class="verdict-box neutral" id="verdict-box">
+    <div class="verdict-title" id="verdict-title">Not enough data yet</div>
+    <div id="verdict-detail">Collect sessions to see your PMF signal here.</div>
+  </div>
+
+  <!-- Event log -->
+  <div class="section-title">Raw Event Log</div>
+  <div class="event-log" id="event-log">
+    <div class="empty-log">No events yet. Open the app and interact with it.</div>
+  </div>
+
+  <div class="export-row">
+    <button class="btn-export" id="btn-export-csv" type="button">Export CSV</button>
+    <button class="btn-export" id="btn-export-json" type="button">Export JSON</button>
+    <button class="btn-export" id="btn-refresh" type="button">↻ Refresh</button>
+    <button class="btn-export" id="btn-reset" type="button" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">Reset PMF window</button>
+  </div>
+
+  <p class="note" id="source-note">Loading…</p>
+</div>
+
+<script>
+'use strict';
+
+/* ── Config ── */
+const PASS_HASH    = 'MPHGuZzAvfge'; // passphrase (plaintext stored client-side intentionally — this is low-security obfuscation, not auth)
+const SESSION_KEY  = 'wimp_dash_auth';
+const STORAGE_KEY  = 'wimp_analytics_events';
+const ANALYTICS_URL = null; // Set to Cloudflare Worker URL when available: e.g. 'https://analytics.whereismyparking.com/api'
+
+/* ── Auth gate ── */
+function checkAuth() {
+  return sessionStorage.getItem(SESSION_KEY) === 'ok';
+}
+
+document.getElementById('lock-btn').addEventListener('click', attemptUnlock);
+document.getElementById('lock-input').addEventListener('keydown', e => { if (e.key === 'Enter') attemptUnlock(); });
+
+function attemptUnlock() {
+  const val = document.getElementById('lock-input').value.trim();
+  if (val === PASS_HASH) {
+    sessionStorage.setItem(SESSION_KEY, 'ok');
+    document.getElementById('lock-screen').style.display = 'none';
+    document.getElementById('analytics-app').classList.add('unlocked');
+    render();
+  } else {
+    document.getElementById('lock-error').classList.add('show');
+    document.getElementById('lock-input').value = '';
+    document.getElementById('lock-input').focus();
+  }
+}
+
+if (checkAuth()) {
+  document.getElementById('lock-screen').style.display = 'none';
+  document.getElementById('analytics-app').classList.add('unlocked');
+}
+
+/* ── Data loading ── */
+const EVENT_COLORS = {
+  session_start:    '#94a3b8',
+  location_granted: '#22c55e',
+  location_denied:  '#ef4444',
+  results_shown:    '#3b82f6',
+  navigate_tapped:  '#a855f7',
+  empty_state_hit:  '#f59e0b',
+};
+
+function loadLocalEvents() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+  catch(_) { return []; }
+}
+
+async function loadRemoteEvents() {
+  if (!ANALYTICS_URL) return null;
+  try {
+    const r = await fetch(ANALYTICS_URL + '/stats', {
+      headers: { 'X-Dashboard-Secret': PASS_HASH }
+    });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch(_) { return null; }
+}
+
+/* ── Metrics ── */
+function computeMetrics(events) {
+  const sessions  = events.filter(e => e.event === 'session_start').length;
+  const granted   = events.filter(e => e.event === 'location_granted').length;
+  const denied    = events.filter(e => e.event === 'location_denied').length;
+  const navigated = events.filter(e => e.event === 'navigate_tapped').length;
+  const empty     = events.filter(e => e.event === 'empty_state_hit').length;
+  return {
+    sessions,
+    ttr:       sessions > 0 ? (navigated / sessions) * 100 : null,
+    grantRate: (granted + denied) > 0 ? (granted / (granted + denied)) * 100 : null,
+    emptyRate: sessions > 0 ? (empty / sessions) * 100 : null,
+  };
+}
+
+function fmtPct(n) { return n === null ? '—' : Math.round(n) + '%'; }
+function fmtTime(ts) {
+  return new Date(ts).toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+
+function renderVerdict(m) {
+  const box = document.getElementById('verdict-box');
+  const tit = document.getElementById('verdict-title');
+  const det = document.getElementById('verdict-detail');
+  if (m.sessions < 10) {
+    box.className = 'verdict-box neutral';
+    tit.textContent = 'Collecting data…';
+    det.textContent = `${m.sessions} sessions. Need at least 10 to read the signal.`;
+    return;
+  }
+  const ttr = m.ttr;
+  if (ttr >= 25)     { box.className = 'verdict-box pass'; tit.textContent = '✅ PMF signal: Strong'; det.textContent = `${Math.round(ttr)}% tap-through — above 25% threshold. Move to V2 scoping.`; }
+  else if (ttr >= 15){ box.className = 'verdict-box warn'; tit.textContent = '⚠️ PMF signal: Soft'; det.textContent = `${Math.round(ttr)}% tap-through — 15–25% zone. One iteration then re-test.`; }
+  else               { box.className = 'verdict-box fail'; tit.textContent = '❌ PMF signal: Rework'; det.textContent = `${Math.round(ttr)}% tap-through — below 15%. Revisit the premise.`; }
+}
+
+async function render() {
+  if (!checkAuth()) return;
+  const local = loadLocalEvents();
+  const remote = await loadRemoteEvents(); // null if no endpoint configured
+
+  const events = remote ? remote.events : local;
+  const isRemote = !!remote;
+
+  // Source indicator
+  const dot   = document.getElementById('source-dot');
+  const label = document.getElementById('source-label');
+  const note  = document.getElementById('source-note');
+  if (isRemote) {
+    dot.className = 'source-dot remote';
+    label.textContent = `Cross-device data (${events.length} events from all users)`;
+    note.innerHTML = '🌐 Data is aggregated from <strong>all users across all devices</strong> via the analytics backend.';
+  } else {
+    dot.className = 'source-dot';
+    label.textContent = `Local data only (${local.length} events from this browser)`;
+    note.innerHTML = '📌 Showing <strong>local session data only</strong>. Set <code>ANALYTICS_URL</code> in this file to aggregate across all devices.';
+  }
+
+  const m = computeMetrics(events);
+
+  // KPIs
+  document.getElementById('kpi-sessions').textContent = m.sessions || '0';
+  document.getElementById('kpi-ttr').textContent      = fmtPct(m.ttr);
+  document.getElementById('kpi-grant').textContent    = fmtPct(m.grantRate);
+  document.getElementById('kpi-empty').textContent    = fmtPct(m.emptyRate);
+
+  // Bars
+  const ttrPct = Math.min(m.ttr ?? 0, 100);
+  document.getElementById('ttr-bar').style.width       = ttrPct + '%';
+  document.getElementById('ttr-pct-label').textContent = fmtPct(m.ttr);
+  const grantPct = Math.min(m.grantRate ?? 0, 100);
+  document.getElementById('grant-bar').style.width       = grantPct + '%';
+  document.getElementById('grant-pct-label').textContent = fmtPct(m.grantRate);
+  document.getElementById('ttr-bar').className = 'bar-fill ' + ((m.ttr??0)>=25?'green':(m.ttr??0)>=15?'yellow':'');
+
+  renderVerdict(m);
+
+  // Event log
+  const log = document.getElementById('event-log');
+  if (!events.length) {
+    log.innerHTML = '<div class="empty-log">No events yet. Open the app and interact with it.</div>';
+    return;
+  }
+  log.innerHTML = [...events].reverse().slice(0,100).map(ev => `
+    <div class="event-row">
+      <div class="ev-dot" style="background:${EVENT_COLORS[ev.event]||'#475569'}"></div>
+      <span class="ev-time">${fmtTime(ev.ts)}</span>
+      <span class="ev-name">${ev.event}</span>
+      <span class="ev-meta">${ev.count!=null?ev.count+' results':ev.radius?ev.radius+'m':ev.reason||''}</span>
+      ${isRemote ? '<span class="source-badge remote">live</span>' : ''}
+    </div>`).join('');
+}
+
+/* ── Exports ── */
+document.getElementById('btn-export-csv').addEventListener('click', async () => {
+  if (!checkAuth()) return;
+  const local = loadLocalEvents();
+  const rows = [['timestamp','event','count','radius','reason','lat','lng','name']];
+  local.forEach(e => rows.push([new Date(e.ts).toISOString(),e.event,e.count??'',e.radius??'',e.reason??'',e.lat??'',e.lng??'',e.name??'']));
+  const blob = new Blob([rows.map(r=>r.join(',')).join('\n')], {type:'text/csv'});
+  Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:'wimp-analytics.csv'}).click();
+});
+document.getElementById('btn-export-json').addEventListener('click', () => {
+  if (!checkAuth()) return;
+  const blob = new Blob([JSON.stringify(loadLocalEvents(),null,2)],{type:'application/json'});
+  Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:'wimp-analytics.json'}).click();
+});
+document.getElementById('btn-clear').addEventListener('click', () => {
+  if (!checkAuth()) return;
+  if (confirm('Clear local analytics data?')) { localStorage.removeItem(STORAGE_KEY); render(); }
+});
+document.getElementById('btn-reset').addEventListener('click', () => {
+  if (!checkAuth()) return;
+  if (confirm('Reset the PMF observation window? This clears all local data and marks a fresh start.')) {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.setItem('wimp_pmf_reset_at', Date.now());
+    alert('PMF window reset. Share the app link to start collecting fresh data.');
+    render();
+  }
+});
+document.getElementById('btn-refresh').addEventListener('click', render);
+
+setInterval(render, 10000);
+if (checkAuth()) render();
+</script>
+</body>
+</html>
